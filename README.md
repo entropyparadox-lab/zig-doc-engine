@@ -120,6 +120,17 @@ int main() {
 
 ---
 
+## 🔄 Community Knowledge Flywheel: LLM Drift & Build Error Reports
+
+LLMs frequently generate outdated code when APIs evolve across major releases (e.g. Zig 0.11 ➔ 0.16, Axum 0.7 ➔ 0.8, React 18 ➔ 19).
+
+`zig-doc-engine` operates an open-source **Knowledge Flywheel**:
+1. **Encounter & Fix**: When your AI coding agent (Hermes, Claude Code, Cursor, Codex) encounters an LLM hallucination or build error and verifies a clean fix (Exit Code 0).
+2. **Opt-in Contribution**: With developer consent, submit the sanitized error-fix pair via a [GitHub Issue](https://github.com/entropyparadox-lab/zig-doc-engine/issues/new?template=llm_drift_submission.yml) or Pull Request using our templates.
+3. **Instant Indexing**: Merged submissions are immediately indexed into the `doc-engine` FTS5 database, grounding AI coding agents with zero hallucination.
+
+---
+
 ## 📄 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.

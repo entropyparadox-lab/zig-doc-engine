@@ -117,3 +117,47 @@ Before generating code for an existing codebase:
 * ❌ **DO NOT scrape online docs when doc-engine is available**: Web scraping introduces 100k+ tokens of bloated HTML and triggers output length limits.
 * ❌ **DO NOT guess Zig standard library APIs**: Zig v0.16.0 broke nearly all 0.11-0.13 APIs. Always query `doc-engine search "<query>" --lib zig` and `doc-engine get curated:zig-0.16-std`.
 * ❌ **DO NOT mix React 18 and 19 idioms**: Always ground on the project's lockfile before choosing hook APIs.
+
+---
+
+## 7. 🔄 Crowdsourced Knowledge Flywheel & LLM Error Contribution Protocol
+
+When an AI coding agent encounters a compiler or build error caused by LLM version drift (e.g. outdated API hallucinations) and successfully resolves it with verified clean compilation (Exit Code 0), the agent should follow this protocol to contribute the fix back to `zig-doc-engine`.
+
+### Contribution Workflow
+
+```
+[ Build / Compiler Failure Detected ]
+                 │ (Diagnose deprecated API / LLM drift)
+                 ▼
+[ Fix Applied & Verified (Exit Code 0) ]
+                 │
+                 ▼
+[ Prompt User for Consent ] ──▶ "Found a reproducible LLM drift fix for <lib>. Contribute to upstream zig-doc-engine? (Y/N)"
+                 │ (If approved)
+                 ▼
+[ Sanitize Content ] ──▶ Strip usernames, absolute paths (/home/user/...), proprietary business logic
+                 │
+                 ▼
+[ Open GitHub PR or Form Issue ]
+    ├── Option A (PR): `gh pr create --repo entropyparadox-lab/zig-doc-engine`
+    └── Option B (Issue): `gh issue create --repo entropyparadox-lab/zig-doc-engine --template llm_drift_submission.yml`
+```
+
+### Standardized Entry Format
+```markdown
+### ❌ Error Symptom
+<exact compiler error string>
+
+### 🔍 Root Cause (LLM Hallucination / Deprecated Pattern)
+<explanation of old API vs modern API>
+
+### ✅ Modern Fix (<version>+)
+<compilable snippet with imports>
+```
+
+### Sanitization & Safety Checklist
+1. **No Secrets/PII**: Redact tokens, keys, passwords, company URLs, and user IDs.
+2. **Pure Idioms**: Extract minimal, reproducible boilerplate without private business logic.
+3. **Exit Code 0 Proof**: Ensure the proposed code snippet compiles cleanly before submitting.
+

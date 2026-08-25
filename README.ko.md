@@ -69,6 +69,17 @@ doc-engine list
 
 ---
 
+## 🔄 커뮤니티 지식 플라이휠: LLM 버전 드리프트 & 빌드 에러 기여
+
+LLM은 주요 라이브러리의 메이저 버전 변경(Zig 0.11 ➔ 0.16, Axum 0.7 ➔ 0.8, React 18 ➔ 19 등) 시 구버전 문법을 할루시네이션하는 경우가 많습니다.
+
+`zig-doc-engine`은 오픈소스 **지식 플라이휠(Knowledge Flywheel)**을 운영합니다:
+1. **에러 해결 & 실검증**: AI 코딩 에이전트(Hermes, Claude Code, Cursor, Codex 등)가 빌드/컴파일 에러를 수정하고 종료 코드 0(Exit Code 0)으로 실검증 완료.
+2. **동의 기반 기여**: 개발자 승인 하에 개인정보/사내 시크릿을 마스킹하고 [GitHub Issue Form](https://github.com/entropyparadox-lab/zig-doc-engine/issues/new?template=llm_drift_submission.yml) 또는 PR로 기여.
+3. **즉시 FTS5 색인**: 머지된 해결책은 `doc-engine` 로컬 검색 DB에 즉시 색인되어 차후 전 세계 AI 에이전트의 구버전 할루시네이션을 원천 차단.
+
+---
+
 ## 📄 라이선스
 
 MIT License. 상세 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
