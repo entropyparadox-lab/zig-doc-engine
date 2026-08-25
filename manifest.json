@@ -1,0 +1,31 @@
+{
+  "sources": [
+    {
+      "id": "react",
+      "name": "React 19",
+      "category": "frontend",
+      "version": "19.x",
+      "type": "llms_txt",
+      "url": "https://react.dev/llms.txt",
+      "description": "Official React 19 Core, Hooks, Server Components, and Actions Reference"
+    },
+    {
+      "id": "nextjs",
+      "name": "Next.js 15",
+      "category": "frontend",
+      "version": "15.x",
+      "type": "llms_txt",
+      "url": "https://nextjs.org/docs/llms.txt",
+      "description": "Next.js 15 App Router, Server Components, Turbopack, and Data Fetching"
+    },
+    {
+      "id": "cloudflare-workers",
+      "name": "Cloudflare Workers",
+      "category": "infra",
+      "version": "2025/2026",
+      "type": "llms_txt",
+      "url": "https://developers.cloudflare.com/workers/llms.txt",
+      "description": "Cloudflare Workers, Durable Objects, Workflows, and Edge AI"
+    }
+  ]
+}
