@@ -4,6 +4,7 @@
 - **`main` Signature**: `pub fn main(init: std.process.Init) !void`
 - **CLI Arguments**: `init.minimal.args.iterate()` or `init.arena.allocator()`
 - **For Loop Syntax**: Must use `for (items, 0..) |item, idx|` (never `for (items) |item, idx|`).
+- **Release Artifact Naming & CI**: Tarballs use `zig-{arch}-{os}-{version}` (`zig-x86_64-linux-0.16.0`). In GitHub Actions CI, use `mlugg/setup-zig@v2` (`@v1` is deprecated and 404s).
 
 ## 100% Compilable Main Example
 ```zig
