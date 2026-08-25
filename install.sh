@@ -19,7 +19,7 @@ mkdir -p "${INSTALL_DIR}"
 mkdir -p "${DOCS_DB_DIR}"
 
 # 1. Determine build/install method
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd || echo "")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" >/dev/null 2>&1 && pwd || echo "")"
 
 if [ -n "${SCRIPT_DIR}" ] && [ -f "${SCRIPT_DIR}/build.zig" ]; then
     echo "📦 Building from local source repository..."
