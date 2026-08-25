@@ -28,11 +28,11 @@ pub fn main(init: std.process.Init) !void {
             \\doc-engine (Zig Edition v0.16.0) - High-performance Documentation FTS5 Engine
             \\
             \\Usage:
-            \\  doc-engine search <query> [--lib <lib>] [--ver <version>] [--limit <n>]
+            \\  doc-engine search <query> [--lib <lib>] [--ver <version>] [--tier <1|2|3>] [--limit <n>]
             \\  doc-engine get <id | path | lib>
             \\  doc-engine list
-            \\  doc-engine index-file --lib <lib> --title <title> --path <path> [--version <ver>]
-            \\  doc-engine sync [--id <source_id>]
+            \\  doc-engine index-file --lib <lib> --title <title> --path <path> [--version <ver>] [--tier <1|2|3>]
+            \\  doc-engine sync [--only <libs>] [--category <cat>] [--id <source_id>]
             \\
         , .{});
         std.process.exit(1);
@@ -48,6 +48,7 @@ pub fn main(init: std.process.Init) !void {
         var query_opt: ?[]const u8 = null;
         var lib_opt: ?[]const u8 = null;
         var ver_opt: ?[]const u8 = null;
+        var tier_opt: ?usize = null;
         var limit: usize = 5;
 
         var i: usize = 2;
@@ -59,6 +60,9 @@ pub fn main(init: std.process.Init) !void {
             } else if ((std.mem.eql(u8, arg, "--ver") or std.mem.eql(u8, arg, "--version")) and i + 1 < args.len) {
                 i += 1;
                 ver_opt = args[i];
+            } else if (std.mem.eql(u8, arg, "--tier") and i + 1 < args.len) {
+                i += 1;
+                tier_opt = std.fmt.parseInt(usize, args[i], 10) catch null;
             } else if (std.mem.eql(u8, arg, "--limit") and i + 1 < args.len) {
                 i += 1;
                 limit = std.fmt.parseInt(usize, args[i], 10) catch 5;
@@ -94,7 +98,7 @@ pub fn main(init: std.process.Init) !void {
             first = false;
         }
 
-        const results = try eng.search(sanitized.items, lib_opt, ver_opt, limit);
+        const results = try eng.search(sanitized.items, lib_opt, ver_opt, tier_opt, limit);
 
         writeFd("[\n");
         for (results, 0..) |r, idx| {
@@ -106,10 +110,11 @@ pub fn main(init: std.process.Init) !void {
                 \\    "title": "{s}",
                 \\    "category": "{s}",
                 \\    "version": "{s}",
+                \\    "tier": {d},
                 \\    "path": "{s}",
                 \\    "snippet": "{s}"
                 \\  }}
-            , .{ r.id, r.lib_id, r.title, r.category, r.version, r.path, r.snippet });
+            , .{ r.id, r.lib_id, r.title, r.category, r.version, r.tier, r.path, r.snippet });
             defer allocator.free(row_json);
             writeFd(row_json);
         }
@@ -151,27 +156,33 @@ pub fn main(init: std.process.Init) !void {
                 \\    "lib_id": "{s}",
                 \\    "category": "{s}",
                 \\    "version": "{s}",
+                \\    "tier": {d},
                 \\    "doc_count": {d},
                 \\    "total_bytes": {d}
                 \\  }}
-            , .{ item.lib_id, item.category, item.version, item.doc_count, item.total_bytes });
+            , .{ item.lib_id, item.category, item.version, item.tier, item.doc_count, item.total_bytes });
             defer allocator.free(item_json);
             writeFd(item_json);
         }
         writeFd("\n]\n");
     } else if (std.mem.eql(u8, cmd, "sync")) {
-        const sync_script = try std.fs.path.join(allocator, &[_][]const u8{ home, ".hermes", "scripts", "sync_dev_docs_and_toolchains.py" });
-        const sync_script_c = try allocator.dupeZ(u8, sync_script);
+        const sync_runner = try std.fs.path.join(allocator, &[_][]const u8{ home, ".hermes", "plugins", "dev-docs", "target", "release", "doc-engine" });
+        const sync_runner_c = try allocator.dupeZ(u8, sync_runner);
 
-        var child_args: [3:null]?[*c]const u8 = .{
-            "/usr/bin/env",
-            sync_script_c.ptr,
-            null,
-        };
+        var child_args = try std.ArrayList(?[*c]const u8).initCapacity(allocator, args.len + 2);
+        try child_args.append(allocator, sync_runner_c.ptr);
+        try child_args.append(allocator, "sync");
+
+        var i: usize = 2;
+        while (i < args.len) : (i += 1) {
+            const arg_c = try allocator.dupeZ(u8, args[i]);
+            try child_args.append(allocator, arg_c.ptr);
+        }
+        try child_args.append(allocator, null);
 
         const pid = c.fork();
         if (pid == 0) {
-            _ = c.execvp("/usr/bin/env", @ptrCast(&child_args));
+            _ = c.execv(sync_runner_c.ptr, @ptrCast(child_args.items.ptr));
             std.process.exit(1);
         } else if (pid > 0) {
             var status: c_int = 0;

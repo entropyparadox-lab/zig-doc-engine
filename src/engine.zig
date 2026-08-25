@@ -11,6 +11,7 @@ pub const SearchResult = struct {
     title: []const u8,
     category: []const u8,
     version: []const u8,
+    tier: usize,
     path: []const u8,
     snippet: []const u8,
 };
@@ -19,6 +20,7 @@ pub const LibSummary = struct {
     lib_id: []const u8,
     category: []const u8,
     version: []const u8,
+    tier: usize,
     doc_count: usize,
     total_bytes: usize,
 };
@@ -46,12 +48,14 @@ pub const Engine = struct {
                 \\    title TEXT NOT NULL,
                 \\    category TEXT NOT NULL,
                 \\    version TEXT NOT NULL,
+                \\    tier INTEGER NOT NULL DEFAULT 1,
                 \\    path TEXT NOT NULL,
                 \\    content TEXT NOT NULL,
                 \\    updated_at TEXT NOT NULL
                 \\);
                 \\CREATE INDEX IF NOT EXISTS idx_docs_lib ON docs(lib_id);
                 \\CREATE INDEX IF NOT EXISTS idx_docs_ver ON docs(version);
+                \\CREATE INDEX IF NOT EXISTS idx_docs_tier ON docs(tier);
                 \\CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts USING fts5(
                 \\    id UNINDEXED,
                 \\    lib_id,
@@ -84,16 +88,18 @@ pub const Engine = struct {
         title: []const u8,
         category: []const u8,
         version: []const u8,
+        tier: usize,
         path: []const u8,
         content: []const u8,
     ) !void {
         const sql_docs =
-            \\INSERT INTO docs (id, lib_id, title, category, version, path, content, updated_at)
-            \\VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'))
+            \\INSERT INTO docs (id, lib_id, title, category, version, tier, path, content, updated_at)
+            \\VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, datetime('now'))
             \\ON CONFLICT(id) DO UPDATE SET
             \\   title = excluded.title,
             \\   category = excluded.category,
             \\   version = excluded.version,
+            \\   tier = excluded.tier,
             \\   path = excluded.path,
             \\   content = excluded.content,
             \\   updated_at = excluded.updated_at;
@@ -110,8 +116,9 @@ pub const Engine = struct {
         _ = c.sqlite3_bind_text(stmt1, 3, title.ptr, @intCast(title.len), c.SQLITE_STATIC);
         _ = c.sqlite3_bind_text(stmt1, 4, category.ptr, @intCast(category.len), c.SQLITE_STATIC);
         _ = c.sqlite3_bind_text(stmt1, 5, version.ptr, @intCast(version.len), c.SQLITE_STATIC);
-        _ = c.sqlite3_bind_text(stmt1, 6, path.ptr, @intCast(path.len), c.SQLITE_STATIC);
-        _ = c.sqlite3_bind_text(stmt1, 7, content.ptr, @intCast(content.len), c.SQLITE_STATIC);
+        _ = c.sqlite3_bind_int64(stmt1, 6, @intCast(tier));
+        _ = c.sqlite3_bind_text(stmt1, 7, path.ptr, @intCast(path.len), c.SQLITE_STATIC);
+        _ = c.sqlite3_bind_text(stmt1, 8, content.ptr, @intCast(content.len), c.SQLITE_STATIC);
 
         if (c.sqlite3_step(stmt1) != c.SQLITE_DONE) {
             return error.InsertFailed;
@@ -149,6 +156,7 @@ pub const Engine = struct {
         sanitized_query: []const u8,
         lib_opt: ?[]const u8,
         version_opt: ?[]const u8,
+        tier_opt: ?usize,
         limit: usize,
     ) ![]SearchResult {
         var ver_pattern_buf: [64]u8 = undefined;
@@ -157,70 +165,65 @@ pub const Engine = struct {
             ver_pattern = std.fmt.bufPrint(&ver_pattern_buf, "{s}%", .{ver}) catch null;
         }
 
-        var query_sql: []const u8 = undefined;
-        if (lib_opt != null and ver_pattern != null) {
-            query_sql =
-                \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
-                \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
-                \\FROM docs_fts
-                \\JOIN docs d ON docs_fts.id = d.id
-                \\WHERE docs_fts MATCH ?1 AND d.lib_id = ?2 AND (d.version LIKE ?3 OR d.version = 'latest')
-                \\ORDER BY rank
-                \\LIMIT ?4;
-            ;
-        } else if (lib_opt != null) {
-            query_sql =
-                \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
-                \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
-                \\FROM docs_fts
-                \\JOIN docs d ON docs_fts.id = d.id
-                \\WHERE docs_fts MATCH ?1 AND d.lib_id = ?2
-                \\ORDER BY rank
-                \\LIMIT ?3;
-            ;
-        } else if (ver_pattern != null) {
-            query_sql =
-                \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
-                \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
-                \\FROM docs_fts
-                \\JOIN docs d ON docs_fts.id = d.id
-                \\WHERE docs_fts MATCH ?1 AND (d.version LIKE ?2 OR d.version = 'latest')
-                \\ORDER BY rank
-                \\LIMIT ?3;
-            ;
-        } else {
-            query_sql =
-                \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
-                \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
-                \\FROM docs_fts
-                \\JOIN docs d ON docs_fts.id = d.id
-                \\WHERE docs_fts MATCH ?1
-                \\ORDER BY rank
-                \\LIMIT ?2;
-            ;
+        var query_sql: std.ArrayList(u8) = .empty;
+        defer query_sql.deinit(self.allocator);
+
+        try query_sql.appendSlice(self.allocator,
+            \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.tier, d.path,
+            \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
+            \\FROM docs_fts
+            \\JOIN docs d ON docs_fts.id = d.id
+            \\WHERE docs_fts MATCH ?1
+        );
+
+        if (lib_opt != null) {
+            try query_sql.appendSlice(self.allocator, " AND d.lib_id = ?2");
+        }
+        if (ver_pattern != null) {
+            const ver_idx: u8 = if (lib_opt != null) '3' else '2';
+            const ver_clause = try std.fmt.allocPrint(self.allocator, " AND (d.version LIKE ?{c} OR d.version = 'latest')", .{ver_idx});
+            defer self.allocator.free(ver_clause);
+            try query_sql.appendSlice(self.allocator, ver_clause);
+        }
+        if (tier_opt != null) {
+            var tier_idx: u8 = '2';
+            if (lib_opt != null and ver_pattern != null) {
+                tier_idx = '4';
+            } else if (lib_opt != null or ver_pattern != null) {
+                tier_idx = '3';
+            }
+            const tier_clause = try std.fmt.allocPrint(self.allocator, " AND d.tier = ?{c}", .{tier_idx});
+            defer self.allocator.free(tier_clause);
+            try query_sql.appendSlice(self.allocator, tier_clause);
         }
 
+        // Tier 1 (Curated) ranked higher by default, then BM25 rank
+        try query_sql.appendSlice(self.allocator, " ORDER BY d.tier ASC, rank LIMIT ?;");
+
         var stmt: ?*c.sqlite3_stmt = null;
-        if (c.sqlite3_prepare_v2(self.db, query_sql.ptr, @intCast(query_sql.len), &stmt, null) != c.SQLITE_OK) {
+        if (c.sqlite3_prepare_v2(self.db, query_sql.items.ptr, @intCast(query_sql.items.len), &stmt, null) != c.SQLITE_OK) {
             return error.PrepareFailed;
         }
         defer _ = c.sqlite3_finalize(stmt);
 
-        _ = c.sqlite3_bind_text(stmt, 1, sanitized_query.ptr, @intCast(sanitized_query.len), c.SQLITE_STATIC);
+        var param_idx: c_int = 1;
+        _ = c.sqlite3_bind_text(stmt, param_idx, sanitized_query.ptr, @intCast(sanitized_query.len), c.SQLITE_STATIC);
+        param_idx += 1;
 
-        if (lib_opt != null and ver_pattern != null) {
-            _ = c.sqlite3_bind_text(stmt, 2, lib_opt.?.ptr, @intCast(lib_opt.?.len), c.SQLITE_STATIC);
-            _ = c.sqlite3_bind_text(stmt, 3, ver_pattern.?.ptr, @intCast(ver_pattern.?.len), c.SQLITE_STATIC);
-            _ = c.sqlite3_bind_int64(stmt, 4, @intCast(limit));
-        } else if (lib_opt != null) {
-            _ = c.sqlite3_bind_text(stmt, 2, lib_opt.?.ptr, @intCast(lib_opt.?.len), c.SQLITE_STATIC);
-            _ = c.sqlite3_bind_int64(stmt, 3, @intCast(limit));
-        } else if (ver_pattern != null) {
-            _ = c.sqlite3_bind_text(stmt, 2, ver_pattern.?.ptr, @intCast(ver_pattern.?.len), c.SQLITE_STATIC);
-            _ = c.sqlite3_bind_int64(stmt, 3, @intCast(limit));
-        } else {
-            _ = c.sqlite3_bind_int64(stmt, 2, @intCast(limit));
+        if (lib_opt != null) {
+            _ = c.sqlite3_bind_text(stmt, param_idx, lib_opt.?.ptr, @intCast(lib_opt.?.len), c.SQLITE_STATIC);
+            param_idx += 1;
         }
+        if (ver_pattern != null) {
+            _ = c.sqlite3_bind_text(stmt, param_idx, ver_pattern.?.ptr, @intCast(ver_pattern.?.len), c.SQLITE_STATIC);
+            param_idx += 1;
+        }
+        if (tier_opt != null) {
+            _ = c.sqlite3_bind_int64(stmt, param_idx, @intCast(tier_opt.?));
+            param_idx += 1;
+        }
+
+        _ = c.sqlite3_bind_int64(stmt, param_idx, @intCast(limit));
 
         var list = try std.ArrayList(SearchResult).initCapacity(self.allocator, limit);
 
@@ -230,8 +233,9 @@ pub const Engine = struct {
             const title_c = c.sqlite3_column_text(stmt, 2);
             const category_c = c.sqlite3_column_text(stmt, 3);
             const version_c = c.sqlite3_column_text(stmt, 4);
-            const path_c = c.sqlite3_column_text(stmt, 5);
-            const snip_c = c.sqlite3_column_text(stmt, 6);
+            const tier_val: usize = @intCast(c.sqlite3_column_int64(stmt, 5));
+            const path_c = c.sqlite3_column_text(stmt, 6);
+            const snip_c = c.sqlite3_column_text(stmt, 7);
 
             list.appendAssumeCapacity(SearchResult{
                 .id = if (id_c != null) try self.allocator.dupe(u8, std.mem.span(id_c)) else "",
@@ -239,6 +243,7 @@ pub const Engine = struct {
                 .title = if (title_c != null) try self.allocator.dupe(u8, std.mem.span(title_c)) else "",
                 .category = if (category_c != null) try self.allocator.dupe(u8, std.mem.span(category_c)) else "",
                 .version = if (version_c != null) try self.allocator.dupe(u8, std.mem.span(version_c)) else "",
+                .tier = tier_val,
                 .path = if (path_c != null) try self.allocator.dupe(u8, std.mem.span(path_c)) else "",
                 .snippet = if (snip_c != null) try self.allocator.dupe(u8, std.mem.span(snip_c)) else "",
             });
@@ -268,10 +273,10 @@ pub const Engine = struct {
 
     pub fn listLibraries(self: *Engine) ![]LibSummary {
         const sql =
-            \\SELECT lib_id, category, version, COUNT(*), SUM(LENGTH(content))
+            \\SELECT lib_id, category, version, tier, COUNT(*), SUM(LENGTH(content))
             \\FROM docs
-            \\GROUP BY lib_id, category, version
-            \\ORDER BY category, lib_id, version;
+            \\GROUP BY lib_id, category, version, tier
+            \\ORDER BY tier, category, lib_id, version;
         ;
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.db, sql.ptr, @intCast(sql.len), &stmt, null) != c.SQLITE_OK) {
@@ -285,13 +290,15 @@ pub const Engine = struct {
             const lib_id_c = c.sqlite3_column_text(stmt, 0);
             const cat_c = c.sqlite3_column_text(stmt, 1);
             const ver_c = c.sqlite3_column_text(stmt, 2);
-            const count: usize = @intCast(c.sqlite3_column_int64(stmt, 3));
-            const bytes: usize = @intCast(c.sqlite3_column_int64(stmt, 4));
+            const tier_val: usize = @intCast(c.sqlite3_column_int64(stmt, 3));
+            const count: usize = @intCast(c.sqlite3_column_int64(stmt, 4));
+            const bytes: usize = @intCast(c.sqlite3_column_int64(stmt, 5));
 
             try list.append(self.allocator, LibSummary{
                 .lib_id = if (lib_id_c != null) try self.allocator.dupe(u8, std.mem.span(lib_id_c)) else "",
                 .category = if (cat_c != null) try self.allocator.dupe(u8, std.mem.span(cat_c)) else "",
                 .version = if (ver_c != null) try self.allocator.dupe(u8, std.mem.span(ver_c)) else "",
+                .tier = tier_val,
                 .doc_count = count,
                 .total_bytes = bytes,
             });

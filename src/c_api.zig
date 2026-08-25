@@ -66,7 +66,7 @@ export fn doc_engine_search_json_ver(
         first = false;
     }
 
-    const results = eng.search(sanitized.items, lib_span, ver_span, limit) catch return null;
+    const results = eng.search(sanitized.items, lib_span, ver_span, null, limit) catch return null;
 
     var json_buf: std.ArrayList(u8) = .empty;
     defer json_buf.deinit(allocator);
@@ -81,10 +81,11 @@ export fn doc_engine_search_json_ver(
             \\    "title": "{s}",
             \\    "category": "{s}",
             \\    "version": "{s}",
+            \\    "tier": {d},
             \\    "path": "{s}",
             \\    "snippet": "{s}"
             \\  }}
-        , .{ r.id, r.lib_id, r.title, r.category, r.version, r.path, r.snippet }) catch return null;
+        , .{ r.id, r.lib_id, r.title, r.category, r.version, r.tier, r.path, r.snippet }) catch return null;
         defer allocator.free(row_str);
         json_buf.appendSlice(allocator, row_str) catch return null;
     }
