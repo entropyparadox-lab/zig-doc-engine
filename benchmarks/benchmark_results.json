@@ -1,0 +1,122 @@
+[
+  {
+    "model": "Gemini 3.7 Flash",
+    "scenario": "Zig v0.16.0",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 845,
+    "after_tok": 1392,
+    "before_lat": 3.216284081339836,
+    "after_lat": 1.961826621554792
+  },
+  {
+    "model": "Gemini 3.7 Flash",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1154,
+    "after_tok": 1163,
+    "before_lat": 3.2870952133089304,
+    "after_lat": 2.5291211400181055
+  },
+  {
+    "model": "Gemini 3.7 Flash",
+    "scenario": "React 18 / Next 14",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1352,
+    "after_tok": 1741,
+    "before_lat": 3.7935226941481233,
+    "after_lat": 4.422716431319714
+  },
+  {
+    "model": "Gemini 3.7 Flash",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 708,
+    "after_tok": 723,
+    "before_lat": 3.2617702642455697,
+    "after_lat": 1.933826525695622
+  },
+  {
+    "model": "Claude Fable",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 794,
+    "after_tok": 1469,
+    "before_lat": 3.080241011455655,
+    "after_lat": 2.396199901588261
+  },
+  {
+    "model": "Claude Fable",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1142,
+    "after_tok": 1210,
+    "before_lat": 3.2385868467390537,
+    "after_lat": 2.6338799130171537
+  },
+  {
+    "model": "Claude Fable",
+    "scenario": "React 18 / Next 14",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1545,
+    "after_tok": 1525,
+    "before_lat": 4.237803029827774,
+    "after_lat": 3.703152776695788
+  },
+  {
+    "model": "Claude Fable",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 780,
+    "after_tok": 880,
+    "before_lat": 3.94692896399647,
+    "after_lat": 2.367711342871189
+  },
+  {
+    "model": "Qwen 3.8 27B",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 0,
+    "after_tok": 2177,
+    "before_lat": 0.0,
+    "after_lat": 3.423044493421912
+  },
+  {
+    "model": "Qwen 3.8 27B",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 2778,
+    "after_tok": 8358,
+    "before_lat": 6.506621031090617,
+    "after_lat": 18.784565863199532
+  },
+  {
+    "model": "Qwen 3.8 27B",
+    "scenario": "React 18 / Next 14",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 12256,
+    "after_tok": 12243,
+    "before_lat": 25.618121411651373,
+    "after_lat": 25.149197030812502
+  },
+  {
+    "model": "Qwen 3.8 27B",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1685,
+    "after_tok": 2846,
+    "before_lat": 3.5999412117525935,
+    "after_lat": 5.208233335055411
+  }
+]

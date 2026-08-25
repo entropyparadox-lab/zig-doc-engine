@@ -1,0 +1,322 @@
+[
+  {
+    "model": "OpenAI GPT-4o",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 226,
+    "after_tok": 930,
+    "before_lat": 2.505087529309094,
+    "after_lat": 2.5339348390698433
+  },
+  {
+    "model": "OpenAI GPT-4o",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 284,
+    "after_tok": 741,
+    "before_lat": 2.0896757999435067,
+    "after_lat": 2.820551692508161
+  },
+  {
+    "model": "OpenAI GPT-4o",
+    "scenario": "React 18 / Next 14",
+    "before_valid": true,
+    "after_valid": false,
+    "before_tok": 324,
+    "after_tok": 607,
+    "before_lat": 3.217737842351198,
+    "after_lat": 1.8509744703769684
+  },
+  {
+    "model": "OpenAI GPT-4o",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 185,
+    "after_tok": 356,
+    "before_lat": 3.2206254536285996,
+    "after_lat": 1.3654886800795794
+  },
+  {
+    "model": "OpenAI GPT-4o-mini",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 207,
+    "after_tok": 913,
+    "before_lat": 2.0044847317039967,
+    "after_lat": 3.4725891491398215
+  },
+  {
+    "model": "OpenAI GPT-4o-mini",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 329,
+    "after_tok": 716,
+    "before_lat": 3.838931984268129,
+    "after_lat": 4.1316330237314105
+  },
+  {
+    "model": "OpenAI GPT-4o-mini",
+    "scenario": "React 18 / Next 14",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 395,
+    "after_tok": 602,
+    "before_lat": 4.823109214194119,
+    "after_lat": 2.4939910685643554
+  },
+  {
+    "model": "OpenAI GPT-4o-mini",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 162,
+    "after_tok": 356,
+    "before_lat": 1.6777939945459366,
+    "after_lat": 0.7687536533921957
+  },
+  {
+    "model": "OpenAI GPT-4-turbo",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 212,
+    "after_tok": 949,
+    "before_lat": 6.26030177436769,
+    "after_lat": 8.241626482456923
+  },
+  {
+    "model": "OpenAI GPT-4-turbo",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 298,
+    "after_tok": 603,
+    "before_lat": 8.349528816528618,
+    "after_lat": 7.144384897314012
+  },
+  {
+    "model": "OpenAI GPT-4-turbo",
+    "scenario": "React 18 / Next 14",
+    "before_valid": false,
+    "after_valid": false,
+    "before_tok": 414,
+    "after_tok": 646,
+    "before_lat": 11.17551133222878,
+    "after_lat": 9.266558290459216
+  },
+  {
+    "model": "OpenAI GPT-4-turbo",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 244,
+    "after_tok": 356,
+    "before_lat": 5.282007951289415,
+    "after_lat": 3.3531715823337436
+  },
+  {
+    "model": "Google Gemini 3.7 Flash",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 897,
+    "after_tok": 1460,
+    "before_lat": 4.334563145413995,
+    "after_lat": 2.1924966564401984
+  },
+  {
+    "model": "Google Gemini 3.7 Flash",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1136,
+    "after_tok": 1248,
+    "before_lat": 3.326317018829286,
+    "after_lat": 2.996422271244228
+  },
+  {
+    "model": "Google Gemini 3.7 Flash",
+    "scenario": "React 18 / Next 14",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1844,
+    "after_tok": 1715,
+    "before_lat": 4.55254496447742,
+    "after_lat": 3.9288068963214755
+  },
+  {
+    "model": "Google Gemini 3.7 Flash",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1011,
+    "after_tok": 795,
+    "before_lat": 3.0221437457948923,
+    "after_lat": 16.69773725513369
+  },
+  {
+    "model": "Google Gemini 3.5 Flash",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 1026,
+    "after_tok": 1768,
+    "before_lat": 4.5860021356493235,
+    "after_lat": 4.28273996617645
+  },
+  {
+    "model": "Google Gemini 3.5 Flash",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1071,
+    "after_tok": 1844,
+    "before_lat": 4.55765320174396,
+    "after_lat": 5.696306347846985
+  },
+  {
+    "model": "Google Gemini 3.5 Flash",
+    "scenario": "React 18 / Next 14",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1948,
+    "after_tok": 2273,
+    "before_lat": 8.6638080207631,
+    "after_lat": 7.590431052260101
+  },
+  {
+    "model": "Google Gemini 3.5 Flash",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 717,
+    "after_tok": 872,
+    "before_lat": 3.4755707615986466,
+    "after_lat": 2.843455675058067
+  },
+  {
+    "model": "Google Gemini 2.5 Flash",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 1152,
+    "after_tok": 1254,
+    "before_lat": 6.468570766039193,
+    "after_lat": 3.028818754479289
+  },
+  {
+    "model": "Google Gemini 2.5 Flash",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1575,
+    "after_tok": 1330,
+    "before_lat": 8.192198269069195,
+    "after_lat": 5.3474705293774605
+  },
+  {
+    "model": "Google Gemini 2.5 Flash",
+    "scenario": "React 18 / Next 14",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 3281,
+    "after_tok": 2546,
+    "before_lat": 16.369453220628202,
+    "after_lat": 10.426907454617321
+  },
+  {
+    "model": "Google Gemini 2.5 Flash",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 3223,
+    "after_tok": 574,
+    "before_lat": 17.105578768067062,
+    "after_lat": 2.4581943191587925
+  },
+  {
+    "model": "Qwen 3.8 27B",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": true,
+    "before_tok": 9712,
+    "after_tok": 3780,
+    "before_lat": 22.008560925722122,
+    "after_lat": 7.137673879042268
+  },
+  {
+    "model": "Qwen 3.8 27B",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 921,
+    "after_tok": 1928,
+    "before_lat": 1.8472592290490866,
+    "after_lat": 3.3212730549275875
+  },
+  {
+    "model": "Qwen 3.8 27B",
+    "scenario": "React 18 / Next 14",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 7270,
+    "after_tok": 8317,
+    "before_lat": 16.136361193843186,
+    "after_lat": 17.48229701630771
+  },
+  {
+    "model": "Qwen 3.8 27B",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": true,
+    "after_valid": true,
+    "before_tok": 1230,
+    "after_tok": 1355,
+    "before_lat": 2.7308657420799136,
+    "after_lat": 2.096290845423937
+  },
+  {
+    "model": "GLM 5.3",
+    "scenario": "Zig v0.16.0",
+    "before_valid": false,
+    "after_valid": false,
+    "before_tok": 0,
+    "after_tok": 0,
+    "before_lat": 0.0,
+    "after_lat": 0.0
+  },
+  {
+    "model": "GLM 5.3",
+    "scenario": "Rust (Axum 0.7)",
+    "before_valid": false,
+    "after_valid": false,
+    "before_tok": 0,
+    "after_tok": 0,
+    "before_lat": 0.0,
+    "after_lat": 0.0
+  },
+  {
+    "model": "GLM 5.3",
+    "scenario": "React 18 / Next 14",
+    "before_valid": false,
+    "after_valid": false,
+    "before_tok": 0,
+    "after_tok": 0,
+    "before_lat": 0.0,
+    "after_lat": 0.0
+  },
+  {
+    "model": "GLM 5.3",
+    "scenario": "Tailwind CSS v4",
+    "before_valid": false,
+    "after_valid": false,
+    "before_tok": 0,
+    "after_tok": 0,
+    "before_lat": 0.0,
+    "after_lat": 0.0
+  }
+]
