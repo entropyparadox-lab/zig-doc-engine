@@ -32,12 +32,23 @@ export fn doc_engine_search_json(
     lib_filter: [*c]const u8,
     limit: usize,
 ) [*c]u8 {
+    return doc_engine_search_json_ver(handle, query, lib_filter, null, limit);
+}
+
+export fn doc_engine_search_json_ver(
+    handle: DocEngineHandle,
+    query: [*c]const u8,
+    lib_filter: [*c]const u8,
+    ver_filter: [*c]const u8,
+    limit: usize,
+) [*c]u8 {
     if (handle == null or query == null) return null;
     const eng: *engine.Engine = @ptrCast(@alignCast(handle.?));
     const allocator = eng.allocator;
 
     const query_span = std.mem.span(query);
     const lib_span: ?[]const u8 = if (lib_filter != null and lib_filter[0] != 0) std.mem.span(lib_filter) else null;
+    const ver_span: ?[]const u8 = if (ver_filter != null and ver_filter[0] != 0) std.mem.span(ver_filter) else null;
 
     // Sanitize query
     var sanitized: std.ArrayList(u8) = .empty;
@@ -55,7 +66,7 @@ export fn doc_engine_search_json(
         first = false;
     }
 
-    const results = eng.search(sanitized.items, lib_span, limit) catch return null;
+    const results = eng.search(sanitized.items, lib_span, ver_span, limit) catch return null;
 
     var json_buf: std.ArrayList(u8) = .empty;
     defer json_buf.deinit(allocator);

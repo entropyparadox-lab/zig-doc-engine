@@ -28,10 +28,10 @@ pub fn main(init: std.process.Init) !void {
             \\doc-engine (Zig Edition v0.16.0) - High-performance Documentation FTS5 Engine
             \\
             \\Usage:
-            \\  doc-engine search <query> [--lib <lib>] [--limit <n>]
+            \\  doc-engine search <query> [--lib <lib>] [--ver <version>] [--limit <n>]
             \\  doc-engine get <id | path | lib>
             \\  doc-engine list
-            \\  doc-engine index-file --lib <lib> --title <title> --path <path>
+            \\  doc-engine index-file --lib <lib> --title <title> --path <path> [--version <ver>]
             \\  doc-engine sync [--id <source_id>]
             \\
         , .{});
@@ -47,6 +47,7 @@ pub fn main(init: std.process.Init) !void {
     if (std.mem.eql(u8, cmd, "search")) {
         var query_opt: ?[]const u8 = null;
         var lib_opt: ?[]const u8 = null;
+        var ver_opt: ?[]const u8 = null;
         var limit: usize = 5;
 
         var i: usize = 2;
@@ -55,6 +56,9 @@ pub fn main(init: std.process.Init) !void {
             if (std.mem.eql(u8, arg, "--lib") and i + 1 < args.len) {
                 i += 1;
                 lib_opt = args[i];
+            } else if ((std.mem.eql(u8, arg, "--ver") or std.mem.eql(u8, arg, "--version")) and i + 1 < args.len) {
+                i += 1;
+                ver_opt = args[i];
             } else if (std.mem.eql(u8, arg, "--limit") and i + 1 < args.len) {
                 i += 1;
                 limit = std.fmt.parseInt(usize, args[i], 10) catch 5;
@@ -90,7 +94,7 @@ pub fn main(init: std.process.Init) !void {
             first = false;
         }
 
-        const results = try eng.search(sanitized.items, lib_opt, limit);
+        const results = try eng.search(sanitized.items, lib_opt, ver_opt, limit);
 
         writeFd("[\n");
         for (results, 0..) |r, idx| {
@@ -156,7 +160,6 @@ pub fn main(init: std.process.Init) !void {
         }
         writeFd("\n]\n");
     } else if (std.mem.eql(u8, cmd, "sync")) {
-        // Run python sync / curl sync wrapper
         const sync_script = try std.fs.path.join(allocator, &[_][]const u8{ home, ".hermes", "scripts", "sync_dev_docs_and_toolchains.py" });
         const sync_script_c = try allocator.dupeZ(u8, sync_script);
 

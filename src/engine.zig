@@ -51,6 +51,7 @@ pub const Engine = struct {
                 \\    updated_at TEXT NOT NULL
                 \\);
                 \\CREATE INDEX IF NOT EXISTS idx_docs_lib ON docs(lib_id);
+                \\CREATE INDEX IF NOT EXISTS idx_docs_ver ON docs(version);
                 \\CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts USING fts5(
                 \\    id UNINDEXED,
                 \\    lib_id,
@@ -147,25 +148,57 @@ pub const Engine = struct {
         self: *Engine,
         sanitized_query: []const u8,
         lib_opt: ?[]const u8,
+        version_opt: ?[]const u8,
         limit: usize,
     ) ![]SearchResult {
-        const query_sql = if (lib_opt != null)
-            \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
-            \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
-            \\FROM docs_fts
-            \\JOIN docs d ON docs_fts.id = d.id
-            \\WHERE docs_fts MATCH ?1 AND d.lib_id = ?2
-            \\ORDER BY rank
-            \\LIMIT ?3;
-        else
-            \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
-            \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
-            \\FROM docs_fts
-            \\JOIN docs d ON docs_fts.id = d.id
-            \\WHERE docs_fts MATCH ?1
-            \\ORDER BY rank
-            \\LIMIT ?2;
-        ;
+        var ver_pattern_buf: [64]u8 = undefined;
+        var ver_pattern: ?[]const u8 = null;
+        if (version_opt) |ver| {
+            ver_pattern = std.fmt.bufPrint(&ver_pattern_buf, "{s}%", .{ver}) catch null;
+        }
+
+        var query_sql: []const u8 = undefined;
+        if (lib_opt != null and ver_pattern != null) {
+            query_sql =
+                \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
+                \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
+                \\FROM docs_fts
+                \\JOIN docs d ON docs_fts.id = d.id
+                \\WHERE docs_fts MATCH ?1 AND d.lib_id = ?2 AND (d.version LIKE ?3 OR d.version = 'latest')
+                \\ORDER BY rank
+                \\LIMIT ?4;
+            ;
+        } else if (lib_opt != null) {
+            query_sql =
+                \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
+                \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
+                \\FROM docs_fts
+                \\JOIN docs d ON docs_fts.id = d.id
+                \\WHERE docs_fts MATCH ?1 AND d.lib_id = ?2
+                \\ORDER BY rank
+                \\LIMIT ?3;
+            ;
+        } else if (ver_pattern != null) {
+            query_sql =
+                \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
+                \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
+                \\FROM docs_fts
+                \\JOIN docs d ON docs_fts.id = d.id
+                \\WHERE docs_fts MATCH ?1 AND (d.version LIKE ?2 OR d.version = 'latest')
+                \\ORDER BY rank
+                \\LIMIT ?3;
+            ;
+        } else {
+            query_sql =
+                \\SELECT d.id, d.lib_id, d.title, d.category, d.version, d.path,
+                \\       snippet(docs_fts, 3, '<b>', '</b>', '...', 25) as snip
+                \\FROM docs_fts
+                \\JOIN docs d ON docs_fts.id = d.id
+                \\WHERE docs_fts MATCH ?1
+                \\ORDER BY rank
+                \\LIMIT ?2;
+            ;
+        }
 
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.db, query_sql.ptr, @intCast(query_sql.len), &stmt, null) != c.SQLITE_OK) {
@@ -174,8 +207,16 @@ pub const Engine = struct {
         defer _ = c.sqlite3_finalize(stmt);
 
         _ = c.sqlite3_bind_text(stmt, 1, sanitized_query.ptr, @intCast(sanitized_query.len), c.SQLITE_STATIC);
-        if (lib_opt) |lib| {
-            _ = c.sqlite3_bind_text(stmt, 2, lib.ptr, @intCast(lib.len), c.SQLITE_STATIC);
+
+        if (lib_opt != null and ver_pattern != null) {
+            _ = c.sqlite3_bind_text(stmt, 2, lib_opt.?.ptr, @intCast(lib_opt.?.len), c.SQLITE_STATIC);
+            _ = c.sqlite3_bind_text(stmt, 3, ver_pattern.?.ptr, @intCast(ver_pattern.?.len), c.SQLITE_STATIC);
+            _ = c.sqlite3_bind_int64(stmt, 4, @intCast(limit));
+        } else if (lib_opt != null) {
+            _ = c.sqlite3_bind_text(stmt, 2, lib_opt.?.ptr, @intCast(lib_opt.?.len), c.SQLITE_STATIC);
+            _ = c.sqlite3_bind_int64(stmt, 3, @intCast(limit));
+        } else if (ver_pattern != null) {
+            _ = c.sqlite3_bind_text(stmt, 2, ver_pattern.?.ptr, @intCast(ver_pattern.?.len), c.SQLITE_STATIC);
             _ = c.sqlite3_bind_int64(stmt, 3, @intCast(limit));
         } else {
             _ = c.sqlite3_bind_int64(stmt, 2, @intCast(limit));
@@ -230,7 +271,7 @@ pub const Engine = struct {
             \\SELECT lib_id, category, version, COUNT(*), SUM(LENGTH(content))
             \\FROM docs
             \\GROUP BY lib_id, category, version
-            \\ORDER BY category, lib_id;
+            \\ORDER BY category, lib_id, version;
         ;
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.db, sql.ptr, @intCast(sql.len), &stmt, null) != c.SQLITE_OK) {

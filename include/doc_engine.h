@@ -35,6 +35,17 @@ void doc_engine_close(DocEngineHandle handle);
 char* doc_engine_search_json(DocEngineHandle handle, const char* query, const char* lib_filter, size_t limit);
 
 /**
+ * Search the documentation corpus with explicit version filtering.
+ * @param handle Valid DocEngineHandle.
+ * @param query Search query string.
+ * @param lib_filter Optional library ID filter.
+ * @param ver_filter Optional version filter (e.g. "0.7", "18", "v3").
+ * @param limit Maximum results count.
+ * @return Heap-allocated JSON string (must be freed with doc_engine_free_string), or NULL on error.
+ */
+char* doc_engine_search_json_ver(DocEngineHandle handle, const char* query, const char* lib_filter, const char* ver_filter, size_t limit);
+
+/**
  * Free a string allocated by doc_engine_search_json.
  * @param str Pointer to string.
  */
