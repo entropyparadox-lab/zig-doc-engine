@@ -1,34 +1,41 @@
-# React 18 Core Conventions & Hooks
+# React 18 Core Conventions & Compilable Types
 
-## Key Patterns in React 18
-- **Client-Centric Hooks**: `useState`, `useEffect`, `useCallback`, `useMemo`, `useRef`.
-- **Concurrent Features**: `useTransition`, `useDeferredValue`, `Suspense`.
-- **No Native Server Actions**: Mutations handled via manual `fetch` / TanStack Query, not `useActionState` or `useFormStatus` (which are React 19+ only).
+## React 18 Standard Action & Transition Pattern
+In standard React 18 / Next.js 14, manage async form state via `useTransition` and `useState` (avoids `@types/react-dom` missing export issues):
 
 ```tsx
+'use client'
+
 import React, { useState, useTransition } from 'react';
 
-export function ItemList() {
-  const [items, setItems] = useState<string[]>([]);
+interface FormState {
+  success: boolean;
+  message?: string;
+}
+
+export function ContactForm() {
+  const [state, setState] = useState<FormState>({ success: false });
   const [isPending, startTransition] = useTransition();
 
-  const handleAdd = (name: string) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+
     startTransition(async () => {
-      const res = await fetch('/api/items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
-      const data = await res.json();
-      setItems((prev) => [...prev, data.name]);
+      // Async server action call
+      setState({ success: true, message: `Hello, ${name}` });
     });
   };
 
   return (
-    <div>
-      {isPending && <p>Updating...</p>}
-      <ul>{items.map((it, idx) => <li key={idx}>{it}</li>)}</ul>
-    </div>
+    <form onSubmit={handleSubmit}>
+      <input name="name" required />
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Submitting...' : 'Submit'}
+      </button>
+      {state.message && <p>{state.message}</p>}
+    </form>
   );
 }
 ```

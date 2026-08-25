@@ -9,3 +9,5 @@ zig-out/
 *.so
 *.dylib
 .DS_Store
+benchmarks/compiler_testbeds/
+benchmarks/compiler_e2e_results.json

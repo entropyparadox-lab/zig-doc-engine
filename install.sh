@@ -37,9 +37,7 @@ else
         zig build -Doptimize=ReleaseFast
         cp -f "${TMP_DIR}/zig-doc-engine/zig-out/bin/${BIN_NAME}" "${INSTALL_DIR}/${BIN_NAME}"
     else
-        echo "⚠️ Zig toolchain not detected. Checking for pre-compiled binary..."
-        # If pre-built release binary is published, download it; otherwise guide user
-        echo "❌ Please install Zig (v0.14+ or v0.16.0) or run with Zig installed."
+        echo "❌ Please install Zig (v0.14+ or v0.16.0) to compile doc-engine."
         exit 1
     fi
     SOURCE_ROOT="${TMP_DIR}/zig-doc-engine"
@@ -48,17 +46,23 @@ fi
 chmod +x "${INSTALL_DIR}/${BIN_NAME}"
 
 # 2. Seed curated documentation index
-echo "📚 Indexing curated documentation catalogs (Axum 0.8, SQLx 0.8, React 19, Tailwind 4, Zig 0.16)..."
+echo "📚 Indexing curated documentation catalogs (Axum 0.8, SQLx 0.8, Tokio 1.43, Tower-HTTP 0.6, React 19, Vite 6, Tailwind 4, Zig 0.16)..."
 if [ -d "${SOURCE_ROOT}/curated" ]; then
     find "${SOURCE_ROOT}/curated" -name "*.md" | while read -r doc_file; do
         rel_path="${doc_file#"${SOURCE_ROOT}/curated/"}"
-        lib_name="$(echo "${rel_path}" | cut -d'/' -f1)"
+        category="$(echo "${rel_path}" | cut -d'/' -f1)"
         file_stem="$(basename "${doc_file}" .md)"
+        
+        lib_name="$(echo "${file_stem}" | cut -d'-' -f1)"
+        if [[ "${file_stem}" == "tower-http"* ]]; then
+            lib_name="tower-http"
+        fi
         
         "${INSTALL_DIR}/${BIN_NAME}" index-file \
             --lib "${lib_name}" \
             --title "${file_stem}" \
             --path "${doc_file}" \
+            --category "${category}" \
             --version "latest" \
             --tier 1 >/dev/null 2>&1 || true
     done
@@ -76,7 +80,3 @@ echo "✅ [doc-engine] Successfully installed to ${INSTALL_DIR}/${BIN_NAME}"
 echo ""
 echo "🚀 Quick verification:"
 "${INSTALL_DIR}/${BIN_NAME}" list || true
-echo ""
-echo "🔍 Try searching docs:"
-echo "  doc-engine search \"axum State route\""
-echo "  doc-engine search \"sqlx query sqlite\""
