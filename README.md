@@ -32,6 +32,7 @@ Benchmarked on Linux x86_64 across a synthetic **10MB documentation corpus (11,0
 * **Sub-millisecond Cold Starts**: Native AOT binary starts in ~1.2ms with zero VM or runtime overhead.
 * **Dual Target Output**: Builds both a standalone CLI binary (`doc-engine`) and a static C-ABI library (`libdocengine.a`) with C headers.
 * **Pluggable Data Sources**: Indexes `llms.txt`, official markdown specs, and local documentation repositories.
+* **Empirical Multi-Model Benchmarks**: Verified accuracy improvements across **Gemini, Claude Fable, and Qwen** (see [BENCHMARK.md](BENCHMARK.md)).
 * **AI Agent Ready**: Pre-configured rules and skills for **Hermes, Claude Code, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor, Windsurf, and Roo Code** (see [AGENT.md](AGENT.md)).
 
 ---
