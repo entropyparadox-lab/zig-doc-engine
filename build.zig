@@ -4,14 +4,13 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // 1. CLI Executable
+    // 1. CLI Executable Module
     const cli_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
-    cli_mod.addIncludePath(.{ .cwd_relative = "/home/cycorld/.linuxbrew/opt/sqlite/include" });
-    cli_mod.addLibraryPath(.{ .cwd_relative = "/home/cycorld/.linuxbrew/opt/sqlite/lib" });
+
     cli_mod.linkSystemLibrary("sqlite3", .{});
     cli_mod.link_libc = true;
 
@@ -27,8 +26,6 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    lib_mod.addIncludePath(.{ .cwd_relative = "/home/cycorld/.linuxbrew/opt/sqlite/include" });
-    lib_mod.addLibraryPath(.{ .cwd_relative = "/home/cycorld/.linuxbrew/opt/sqlite/lib" });
     lib_mod.linkSystemLibrary("sqlite3", .{});
     lib_mod.link_libc = true;
 
