@@ -33,6 +33,7 @@ Benchmarked on Linux x86_64 across a synthetic **10MB documentation corpus (11,0
 * **Dual Target Output**: Builds both a standalone CLI binary (`doc-engine`) and a static C-ABI library (`libdocengine.a`) with C headers.
 * **Pluggable Data Sources**: Indexes `llms.txt`, official markdown specs, and local documentation repositories.
 * **Empirical Multi-Model Benchmarks**: Verified accuracy improvements across **Gemini, Claude Fable, and Qwen** (see [BENCHMARK.md](BENCHMARK.md)).
+* **Real Compiler E2E Verification**: Rigorous compiler exit-code 0 benchmarks across `zig`, `rustc`, and `tsc` (see [BENCHMARK_COMPILER_E2E.md](BENCHMARK_COMPILER_E2E.md)).
 * **AI Agent Ready**: Pre-configured rules and skills for **Hermes, Claude Code, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor, Windsurf, and Roo Code** (see [AGENT.md](AGENT.md)).
 
 ---
