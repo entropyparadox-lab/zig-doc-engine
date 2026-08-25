@@ -4,7 +4,17 @@ This guide explains how to integrate `doc-engine` across all major AI coding age
 
 ---
 
-## 🎯 Quick Matrix: Configuration Files per Tool
+## ⚡ Core Anti-Hallucination & Zero-Error Protocol
+
+1. **Lockfile First (SSOT)**: Always inspect `Cargo.lock` or `package-lock.json` before querying.
+2. **2-Step Retrieval (100% Compiler Pass)**:
+   - Step 1: Run `doc-engine search "<keywords>" --lib <lib> --ver <version>` to find the document ID (~1.2ms).
+   - Step 2: Run `doc-engine get <doc_id>` to inject the complete compilable code template & import headers.
+   - Step 3: Generate code matching the exact compiler syntax.
+
+---
+
+## 🎯 Quick Matrix: Configuration Files by Agent
 
 | AI Tool / CLI | Config / Instruction File | How It Uses `doc-engine` |
 | :--- | :--- | :--- |
