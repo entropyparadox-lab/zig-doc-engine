@@ -39,7 +39,7 @@ pub fn main(init: std.process.Init) !void {
     }
     const args = args_list.items;
 
-    if (args.len < 2) {
+    if (args.len < 2 or std.mem.eql(u8, args[1], "--help") or std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "help")) {
         std.debug.print(
             \\doc-engine (Zig Edition v0.16.0) - High-performance Documentation FTS5 Engine
             \\
@@ -51,7 +51,11 @@ pub fn main(init: std.process.Init) !void {
             \\  doc-engine sync [--only <libs>] [--category <cat>] [--id <source_id>]
             \\
         , .{});
-        std.process.exit(1);
+        if (args.len < 2) {
+            std.process.exit(1);
+        } else {
+            return;
+        }
     }
 
     const cmd = args[1];

@@ -89,6 +89,7 @@ doc-engine search "std.Io bufferedReader" --lib zig --tier 2
 ### B. Step 2: Load Complete Compilable Template
 ```bash
 doc-engine get curated:zig-0.16-std
+doc-engine get zig:zig-0.16-single-file-tools
 doc-engine get curated:axum-0.8
 doc-engine get curated:axum-0.7
 doc-engine get curated:react-18
