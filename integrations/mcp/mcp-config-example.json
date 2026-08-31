@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "doc-engine": {
+      "command": "doc-engine",
+      "args": ["mcp"],
+      "env": {}
+    }
+  }
+}

@@ -1,0 +1,17 @@
+name: dev-docs
+version: 1.1.0
+description: "High-performance local developer documentation search and reactive error remediation engine powered by Rust/Zig AOT doc-engine and SQLite FTS5."
+author: EntropyParadox Lab
+kind: standalone
+platforms:
+  - linux
+  - macos
+provides_tools:
+  - doc_search
+  - doc_read
+  - doc_list
+  - doc_sync
+provides_hooks:
+  - transform_terminal_output
+provides_commands:
+  - doc-engine

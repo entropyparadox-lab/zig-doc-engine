@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PostToolExecution": [
+      {
+        "matcher": "Bash",
+        "command": "/path/to/zig-doc-engine/integrations/claude-code/remediate-error.sh"
+      }
+    ]
+  }
+}

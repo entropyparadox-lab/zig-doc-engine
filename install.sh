@@ -46,7 +46,7 @@ fi
 chmod +x "${INSTALL_DIR}/${BIN_NAME}"
 
 # 2. Seed curated documentation index
-echo "📚 Indexing curated documentation catalogs (Axum 0.8, SQLx 0.8, Tokio 1.43, Tower-HTTP 0.6, React 19, Vite 6, Tailwind 4, Zig 0.16)..."
+echo "📚 Indexing curated documentation catalogs (Postgres, Axum 0.8, SQLx 0.8, Tokio 1.43, Tower-HTTP 0.6, React 19, Vite 6, Tailwind 4, Zig 0.16)..."
 if [ -d "${SOURCE_ROOT}/curated" ]; then
     find "${SOURCE_ROOT}/curated" -name "*.md" | while read -r doc_file; do
         rel_path="${doc_file#"${SOURCE_ROOT}/curated/"}"
@@ -74,6 +74,12 @@ if [[ ":$PATH:" != *":${INSTALL_DIR}:"* ]]; then
     [ -n "${ZSH_VERSION:-}" ] && SHELL_RC="${HOME}/.zshrc"
     echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "${SHELL_RC}"
     export PATH="${INSTALL_DIR}:${PATH}"
+fi
+
+# 4. Optional Agent Hooks Setup
+if [ -f "${SOURCE_ROOT}/scripts/setup-agent-hooks.sh" ]; then
+    echo "🤖 Setting up AI coding agent hooks (Hermes, Claude Code, Cursor)..."
+    bash "${SOURCE_ROOT}/scripts/setup-agent-hooks.sh" --all || true
 fi
 
 echo "✅ [doc-engine] Successfully installed to ${INSTALL_DIR}/${BIN_NAME}"

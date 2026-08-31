@@ -69,6 +69,55 @@ doc-engine list
 
 ---
 
+## 🤖 AI 코딩 에이전트 연동 (Zero-Config 반응형 훅)
+
+`zig-doc-engine`은 자율 AI 코딩 에이전트를 위한 권위 있는 문서 기준점이자 반응형 컴파일 에러 치료 인프라입니다. 매 턴마다 불필요하게 프롬프트를 오염시키지 않고, 컴파일/빌드 실패 시에만 에이전트 훅을 통해 즉시 Tier 1 스니펫을 주입합니다.
+
+### ⚡ 원클릭 멀티 에이전트 셋업
+```bash
+./scripts/setup-agent-hooks.sh --all
+```
+
+### 지원 에이전트 생태계
+
+| 에이전트 | 연동 지점 | 동작 모드 | 설명 |
+| :--- | :--- | :--- | :--- |
+| **Hermes Agent** | `transform_terminal_output` (플러그인 훅) | **반응형 (Reactive)** | `~/.hermes/plugins/dev-docs` 플러그인 설치. `zig build`, `cargo`, `next build`, `tsc` 등 실패 시 Tier 1 스니펫 자동 부착. |
+| **Claude Code** | `PostToolExecution` (Bash 훅) | **반응형 (Reactive)** | `~/.claude/hooks/remediate-error.sh` 등록을 통해 빌드 실패 시 최신 API 해결책 컨텍스트 주입. |
+| **Cursor / Windsurf** | `.cursorrules` / `.windsurfrules` | **지시형 (Directive)** | 프로젝트 루트에 2-Step 검색 프로토콜 및 컴파일 제로 에러 지침 주입. |
+| **OpenCode / Codex** | stdio MCP Server | **도구 호출 (Tool Calling)** | MCP를 통해 `doc_search`, `doc_read` 도구 노출. |
+
+### 수동 설치 방법
+
+#### 1. Hermes Agent
+```bash
+cp -r integrations/hermes ~/.hermes/plugins/dev-docs
+hermes plugins enable dev-docs
+```
+
+#### 2. Claude Code
+`~/.claude/settings.json`에 훅 등록:
+```json
+{
+  "hooks": {
+    "PostToolExecution": [
+      {
+        "matcher": "Bash",
+        "command": "~/.claude/hooks/remediate-error.sh"
+      }
+    ]
+  }
+}
+```
+
+#### 3. Cursor IDE
+프로젝트 루트로 `.cursorrules` 복사:
+```bash
+cp integrations/cursor/.cursorrules .cursorrules
+```
+
+---
+
 ## 🔄 커뮤니티 지식 플라이휠: LLM 버전 드리프트 & 빌드 에러 기여
 
 LLM은 주요 라이브러리의 메이저 버전 변경(Zig 0.11 ➔ 0.16, Axum 0.7 ➔ 0.8, React 18 ➔ 19 등) 시 구버전 문법을 할루시네이션하는 경우가 많습니다.

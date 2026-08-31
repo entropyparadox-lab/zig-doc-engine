@@ -78,6 +78,55 @@ doc-engine list
 
 ---
 
+## 🤖 AI Coding Agent Integration (Zero-Config Reactive Hooks)
+
+`zig-doc-engine` acts as the authoritative grounding and reactive error-remediation layer for autonomous AI coding agents. Instead of polluting context with proactive prompt bloat, it intercepts compiler failures dynamically via agent hooks.
+
+### ⚡ One-Line Multi-Agent Setup
+```bash
+./scripts/setup-agent-hooks.sh --all
+```
+
+### Supported Agent Ecosystems
+
+| Agent | Integration Point | Mode | Description |
+| :--- | :--- | :--- | :--- |
+| **Hermes Agent** | `transform_terminal_output` (Plugin Hook) | **Reactive** | Installs `dev-docs` plugin under `~/.hermes/plugins/`. Auto-enriches non-zero compiler outputs (`zig build`, `cargo`, `next build`, `tsc`) with Tier 1 auto-remediation snippets. |
+| **Claude Code** | `PostToolExecution` (Bash Hook) | **Reactive** | Registers `remediate-error.sh` in `~/.claude/hooks/` to intercept broken compiler tools and inject modern API fixes. |
+| **Cursor / Windsurf** | `.cursorrules` / `.windsurfrules` | **Directive** | Injects mandatory 2-step retrieval and compiler zero-error recovery instructions into the workspace root. |
+| **OpenCode / Codex** | stdio MCP Server | **Tool Calling** | Exposes `doc_search` and `doc_read` via Model Context Protocol. |
+
+### Manual Setup Examples
+
+#### 1. Hermes Agent
+```bash
+cp -r integrations/hermes ~/.hermes/plugins/dev-docs
+hermes plugins enable dev-docs
+```
+
+#### 2. Claude Code
+Add to `~/.claude/settings.json`:
+```json
+{
+  "hooks": {
+    "PostToolExecution": [
+      {
+        "matcher": "Bash",
+        "command": "~/.claude/hooks/remediate-error.sh"
+      }
+    ]
+  }
+}
+```
+
+#### 3. Cursor IDE
+Copy `integrations/cursor/.cursorrules` to your project root:
+```bash
+cp integrations/cursor/.cursorrules .cursorrules
+```
+
+---
+
 ## 🔌 C-ABI Embedding (Python, Node.js, C/C++)
 
 `zig-doc-engine` exports a standard C interface defined in `include/doc_engine.h`.
