@@ -1,0 +1,23 @@
+name: "💡 Feature Request"
+description: "Suggest a new indexing capability, CLI integration, or performance improvement"
+title: "[RFC]: "
+labels: ["enhancement", "discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We welcome proposals for new search integrations (MCP, Claude Code, Cursor), performance optimizations, and CLI flags!
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem / Motivation"
+      description: "Explain the context and motivation."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "Proposed Solution"
+      description: "Describe the desired CLI behavior or architecture."
+    validations:
+      required: true

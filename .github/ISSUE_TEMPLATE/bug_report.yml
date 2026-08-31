@@ -1,0 +1,39 @@
+name: "🐛 Bug Report"
+description: "File an issue for a bug or unexpected behavior in zig-doc-engine"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug in `zig-doc-engine`! Please make sure you are running a supported Zig version (0.16.0+).
+  - type: input
+    id: version
+    attributes:
+      label: "Zig & zig-doc-engine Version"
+      description: "Run `zig version` and `zig-doc-engine --version`"
+      placeholder: "Zig: 0.16.0, zig-doc-engine: v1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: "Describe the bug"
+      description: "A clear and concise description of the issue."
+    validations:
+      required: true
+  - type: textarea
+    id: query-or-symbol
+    attributes:
+      label: "Search Query or Symbol"
+      description: "What symbol or query failed (e.g. `std.http.Client`, `ArrayList`)?"
+    validations:
+      required: false
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Command & Output"
+      description: "Terminal output or error traceback."
+      render: bash
+    validations:
+      required: true
