@@ -1,0 +1,17 @@
+# doc-engine: 2-Step Documentation Retrieval & Zero-Error Compiler Protocol
+
+Always follow this protocol before writing or refactoring code in PostgreSQL, Rust, Zig v0.16.0+, React 18/19, Next.js 14/15, Tailwind v3/v4, Zod, or MCP:
+
+1. Fast Triaging:
+   Run `doc-engine search "<keywords>" --lib <lib> --ver <ver>` to retrieve accurate document IDs in ~1.2ms.
+
+2. Full Compilable Template:
+   Run `doc-engine get <doc_id>` (e.g. `curated:zig-0.16-std`, `curated:axum-0.8`, `curated:react-18`) to inspect 100% verified boilerplate and imports.
+
+3. Lockfile Grounding (SSOT):
+   - Check Cargo.lock before writing Axum/SQLx/Tokio code.
+   - Check package.json / pnpm-lock.yaml before choosing React 18 vs 19 or Next 14 vs 15 APIs.
+   - Never guess Zig standard library APIs; Zig v0.16.0 requires std.Io, std.process.Init, and ArrayListUnmanaged.
+
+4. Compiler Failure Recovery:
+   If any compiler or build command fails (Exit Code != 0), immediately search the exact compiler error symbol via `doc-engine search "<error_symbol>" --lib <lib>`.
