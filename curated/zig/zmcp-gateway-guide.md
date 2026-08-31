@@ -2,28 +2,27 @@
 
 Package: `https://github.com/entropyparadox-lab/zmcp-gateway`
 
-`zmcp-gateway` consolidates multiple downstream Model Context Protocol (MCP) tool servers into a **single virtual MCP endpoint** with sub-2.1µs routing latency, 100% transparent zero-cache pass-through, and **W3C OpenTelemetry distributed tracing**.
+`zmcp-gateway` consolidates multiple downstream Model Context Protocol (MCP) tool servers into a **single virtual MCP endpoint** with sub-2.2µs routing latency, explicit opt-in caching (`cache_ttl_sec`), and **W3C OpenTelemetry distributed tracing**.
 
 ---
 
-## 1. Safety Architecture (Zero-Cache Transparent Invariant)
+## 1. Safety Architecture (Explicit Opt-In Caching Contract)
 
-1. **Zero-Cache Transparent Pass-Through**:
-   - Eliminates all stale-read, mutation-skipping, and cache-bloat risks.
-   - All tool executions are directly dispatched to upstreams with 100% freshness guaranteed.
-2. **Sub-2.1µs Zero-Alloc Routing**:
-   - Dispatches requests at **477,000+ req/sec** using Zig 0.16.0 Arena memory isolation.
-3. **Transparent Tool Naming Resolution**:
-   - Supports Hermes canonical names (`mcp__earnlearning__wallet_get`), namespace delimiter (`earnlearning__wallet_get`), dot notation (`earnlearning.wallet_get`), and raw names (`wallet_get`).
+1. **Default: Pure Pass-Through (`cache_ttl_sec = 0`)**:
+   - Polling 도구(`poll_status`), 상태 변이(`company_transfer`), 최신 데이터 조회는 **캐시를 타지 않고 100% 실시간 전달**.
+2. **Explicit Opt-In (`cache_ttl_sec > 0`)**:
+   - 국가 코드, 정적 스키마 등 작성자가 보증한 불변 메타데이터 도구만 지정된 TTL 동안 인메모리 캐싱 (최대 512 엔트리 LRU 및 만료 시 지연 회수).
+3. **Sub-2.2µs Zero-Alloc Routing**:
+   - **459,000+ req/sec** 처리량 및 요청별 Arena 메모리 격리로 메모리 누수 0 바이트 보장.
 4. **W3C OpenTelemetry Tracing (`zlog`)**:
-   - Automatically correlates all tool calls with `traceparent` headers for distributed observability.
+   - 모든 도구 호출에 `traceparent` (`00-{trace_id}-{span_id}-01`) 자동 주입.
 
 ---
 
 ## 2. Installation (`build.zig.zon`)
 
 ```bash
-zig fetch --save https://github.com/entropyparadox-lab/zmcp-gateway/archive/refs/tags/v1.1.0.tar.gz
+zig fetch --save https://github.com/entropyparadox-lab/zmcp-gateway/archive/refs/tags/v1.2.0.tar.gz
 ```
 
 ---
@@ -40,35 +39,28 @@ pub fn main(init: std.process.Init) !void {
 
     var gw = gateway.Gateway.init(allocator, .{
         .name = "my-ai-gateway",
-        .version = "1.1.0",
+        .version = "1.2.0",
     });
     defer gw.deinit();
 
     // Register Upstream
-    const ELHandler = struct {
-        fn handle(ctx: *anyopaque, alloc: std.mem.Allocator, tool_name: []const u8, args_json: []const u8) anyerror!zmcp.CallToolResult {
-            _ = ctx;
-            _ = args_json;
-            if (std.mem.eql(u8, tool_name, "wallet_get")) {
-                return zmcp.CallToolResult.text("{\"balance\": 1000}");
-            }
-            return zmcp.CallToolResult.err("Tool not found");
-        }
-    };
+    var up = gateway.Upstream.init(allocator, "sys", undefined, myHandler);
 
-    var el_up = gateway.Upstream.init(allocator, "earnlearning", undefined, ELHandler.handle);
-    try el_up.addTool(allocator, .{
-        .name = "wallet_get",
-        .description = "Get current wallet balance",
+    // 1. Dynamic / Polling Tool (Default: cache_ttl_sec = 0 -> 100% Real-time Pass-Through)
+    try up.addTool(allocator, .{
+        .name = "poll_status",
+        .description = "Poll dynamic task status",
         .schema_json = "{}",
+        .cache_ttl_sec = 0,
     });
-    try gw.registerUpstream(el_up);
 
-    // Call tool (routes mcp__earnlearning__wallet_get with OTel trace)
-    const call_req = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"mcp__earnlearning__wallet_get\",\"arguments\":{}}}";
-    if (try gw.handleMessage(allocator, call_req)) |resp| {
-        defer allocator.free(resp);
-        std.debug.print("Response: {s}\n", .{resp});
-    }
+    // 2. Static Metadata Tool (Explicit Opt-In: cache_ttl_sec = 3600 -> Safe Caching)
+    try up.addTool(allocator, .{
+        .name = "get_country_code",
+        .description = "Get static country metadata",
+        .schema_json = "{}",
+        .cache_ttl_sec = 3600,
+    });
+    try gw.registerUpstream(up);
 }
 ```
