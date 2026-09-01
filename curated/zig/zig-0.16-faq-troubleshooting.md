@@ -192,7 +192,108 @@ export fn compute_default() i32 {
 
 ---
 
-## 8. Summary Table: LLM Drift Cheat Sheet
+## 8. Monotonic Timers & Benchmarks: `clock_gettime` Fails on Windows
+
+### ❌ Error Symptom
+```text
+lib/std/c.zig:11468:12: error: dependency on libc must be explicitly specified in the build command
+    extern "c" fn clock_gettime(clk_id: clockid_t, tp: *timespec) c_int;
+           ^~~
+```
+Or:
+```text
+error: root source file struct 'time' has no member named 'Timer'
+```
+
+### 🔍 Root Cause
+1. `std.posix.system.clock_gettime` is an `extern "c"` symbol that requires linking Libc when targeting Windows or foreign platforms.
+2. `std.time.Timer` was refactored into the `std.Io` subsystem in Zig v0.16.0+.
+
+### ✅ Modern Fix (v0.16.0+)
+Use `std.Io.Clock.awake.now(init.io)` from `std.process.Init`:
+```zig
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const start_ts = std.Io.Clock.awake.now(io);
+    // ... benchmark workload ...
+    const end_ts = std.Io.Clock.awake.now(io);
+
+    const duration = start_ts.durationTo(end_ts);
+    const elapsed_ns: u64 = @intCast(@max(1, duration.nanoseconds));
+    const elapsed_ms = @as(f64, @floatFromInt(elapsed_ns)) / 1_000_000.0;
+    std.debug.print("Elapsed: {d:.2} ms\n", .{elapsed_ms});
+}
+```
+
+---
+
+## 9. Stdio JSON-RPC Streaming: `std.posix.write` Missing & Deadlock Safety
+
+### ❌ Error Symptom
+```text
+src/transport/stdio.zig:30:42: error: root source file struct 'posix' has no member named 'write'
+    _ = try std.posix.write(stdout_fd, resp);
+            ~~~~~~~~~^~~~~~
+```
+
+### 🔍 Root Cause
+1. `std.posix` in v0.16.0+ exposes raw system calls under `std.posix.system.write`.
+2. A single raw write call can truncate or block on payloads >64KB (OS pipe buffer saturation), causing agent deadlock.
+
+### ✅ Modern Fix (v0.16.0+)
+Implement a robust `writeAllFd` streaming loop:
+```zig
+fn writeAllFd(fd: i32, bytes: []const u8) !void {
+    var written: usize = 0;
+    while (written < bytes.len) {
+        const n_signed = std.posix.system.write(fd, bytes.ptr + written, bytes.len - written);
+        if (@as(isize, @bitCast(n_signed)) < 0) {
+            return error.WriteFailed;
+        }
+        const n: usize = @intCast(n_signed);
+        if (n == 0) break;
+        written += n;
+    }
+}
+```
+
+---
+
+## 10. File Operations: `std.fs.cwd()` Deprecated
+
+### ❌ Error Symptom
+```text
+src/loader.zig:7:28: error: root source file struct 'fs' has no member named 'cwd'
+    const file = try std.fs.cwd().openFile(path, .{ .mode = .read_only });
+                     ~~~~~~^~~~
+```
+
+### 🔍 Root Cause
+Zig v0.16.0 removed ambient global cwd access. File I/O must either go through `std.Io.Dir` or direct POSIX `system.open`/`system.read`.
+
+### ✅ Modern Fix (v0.16.0+)
+```zig
+pub fn loadFile(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
+    const path_z = try allocator.dupeZ(u8, path);
+    defer allocator.free(path_z);
+
+    const fd_raw = std.posix.system.open(path_z.ptr, std.mem.zeroes(std.posix.system.O), 0);
+    if (@as(isize, @bitCast(fd_raw)) < 0) return error.FileNotFound;
+    const fd: i32 = @intCast(fd_raw);
+    defer _ = std.posix.system.close(fd);
+
+    var buf: [65536]u8 = undefined;
+    const bytes_read_raw = std.posix.system.read(fd, &buf, buf.len);
+    if (@as(isize, @bitCast(bytes_read_raw)) < 0) return error.FileReadError;
+    const bytes_read: usize = @intCast(bytes_read_raw);
+    return try allocator.dupe(u8, buf[0..bytes_read]);
+}
+```
+
+---
+
+## 11. Summary Table: LLM Drift Cheat Sheet
 
 | Category | Outdated LLM Hallucination (0.11 ~ 0.13) | Modern Grounding (Zig v0.16.0+) |
 | :--- | :--- | :--- |
@@ -204,3 +305,6 @@ export fn compute_default() i32 {
 | **`build.zig`** | `b.addExecutable(.{ .root_source_file = ... })` | `b.addExecutable(.{ .root_module = mod })` |
 | **`for` loop index**| `for (items) \|item, idx\|` | `for (items, 0..) \|item, idx\|` |
 | **C ABI Tag** | `callconv(.C)` | `callconv(.c)` or bare `export fn` |
+| **Monotonic Timer** | `std.posix.system.clock_gettime(.MONOTONIC)` | `std.Io.Clock.awake.now(init.io)` |
+| **Stdio Write** | `std.posix.write(fd, buf)` | `writeAllFd(fd, buf)` loop with `std.posix.system.write` |
+| **File Access** | `std.fs.cwd().openFile(...)` | `std.posix.system.open` or `std.Io.Dir` |
