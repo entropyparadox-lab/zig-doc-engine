@@ -1,23 +1,24 @@
 ---
 name: doc-engine
-description: Use when looking up verified, version-accurate documentation for Rust, Zig, React 18/19, Next.js 14/15, Tailwind v3/v4, Zod, and MCP.
-version: 1.2.0
+description: Use when looking up verified, version-accurate documentation for Postgres, Rust, Zig, React 18/19, Next.js 14/15, Tailwind v3/v4, Zod, and MCP.
+version: 1.3.0
 author: EntropyParadox Lab
 license: MIT
 metadata:
   hermes:
-    tags: [docs, rust, zig, react, nextjs, tailwind, search, fts5, documentation, lod, 3-tier, 2-step]
+    tags: [docs, postgres, database, rust, zig, react, nextjs, tailwind, search, fts5, documentation, lod, 3-tier, 2-step]
 ---
 
 # doc-engine: Ultra-fast Version-Accurate 3-Tier Documentation Search
 
-Use `doc-engine` whenever implementing code or designing architectures in **Rust**, **Zig v0.16.0+**, **React 18/19**, **Next.js 14/15**, **Tailwind v3/v4**, **Zod**, or **MCP (Model Context Protocol)** to prevent version mismatches, syntax errors, and LLM hallucinations.
+Use `doc-engine` whenever implementing code or designing architectures in **PostgreSQL**, **Rust**, **Zig v0.16.0+**, **React 18/19**, **Next.js 14/15**, **Tailwind v3/v4**, **Zod**, or **MCP (Model Context Protocol)** to prevent version mismatches, syntax errors, security leaks, and LLM hallucinations.
 
 ---
 
 ## 1. Trigger Conditions
 
 Run `doc-engine` before writing or refactoring code when:
+* Designing **PostgreSQL schemas & queries** (verifying RLS policies, `(SELECT auth.uid())` subquery wrapping, `SKIP LOCKED` queues, advisory locks, partial/composite indexes, and `NOT VALID` zero-downtime migrations).
 * Using **Zig v0.16.0+** (verifying `std.Io`, `std.process.Init`, `std.ArrayListUnmanaged`, `build.zig`).
 * Using **Rust Axum / SQLx / Tokio** (verifying Axum 0.7 vs 0.8 `Router`/`State`, SQLx 0.8 `query!`, `JoinSet`, `select!` cancellation safety).
 * Using **React 18 vs 19 / Next.js 14 vs 15** (verifying `useActionState` vs `useFormState`, Server Actions, Turbopack).
@@ -60,27 +61,33 @@ As proven by the empirical compiler E2E benchmark, short summary snippets alone 
 Always ground on the project's lockfiles (`Cargo.lock`, `pnpm-lock.yaml`, `package-lock.json`):
 
 ```bash
-# 1. Rust Axum 0.8 vs 0.7 Routing & State
+# 1. PostgreSQL Performance, Security & Concurrency
+doc-engine search "Row Level Security tenant" --lib postgres
+doc-engine search "SKIP LOCKED deadlock" --lib postgres
+doc-engine search "NOT VALID cursor pagination" --lib postgres
+doc-engine search "composite partial index covering" --lib postgres
+
+# 2. Rust Axum 0.8 vs 0.7 Routing & State
 doc-engine search "Router State" --lib axum --ver 0.8
 doc-engine search "Router State" --lib axum --ver 0.7
 
-# 2. React 18 vs 19 Server Actions & Form Hooks
+# 3. React 18 vs 19 Server Actions & Form Hooks
 doc-engine search "useActionState" --lib react --ver 19
 doc-engine search "useTransition" --lib react --ver 18
 
-# 3. Next.js 14 vs 15 App Router
+# 4. Next.js 14 vs 15 App Router
 doc-engine search "useFormState Server Actions" --lib nextjs --ver 14
 doc-engine search "useActionState Turbopack" --lib nextjs --ver 15
 
-# 4. Tailwind CSS v3 vs v4
+# 5. Tailwind CSS v3 vs v4
 doc-engine search "@theme" --lib tailwindcss --ver 4
 doc-engine search "tailwind.config.js" --lib tailwindcss --ver 3
 
-# 5. Zig v0.16.0 Standard Library & C-ABI
+# 6. Zig v0.16.0 Standard Library & C-ABI
 doc-engine search "process argsWithAllocator" --lib zig
 doc-engine search "export fn c_allocator" --lib zig
 
-# 6. Deep Module Specs (Tier 2)
+# 7. Deep Module Specs (Tier 2)
 doc-engine search "axum::extract" --lib rust --tier 2
 doc-engine search "tokio::sync mpsc" --lib rust --tier 2
 doc-engine search "std.Io bufferedReader" --lib zig --tier 2
@@ -88,6 +95,10 @@ doc-engine search "std.Io bufferedReader" --lib zig --tier 2
 
 ### B. Step 2: Load Complete Compilable Template
 ```bash
+doc-engine get "postgres:postgres-security-and-rls"
+doc-engine get "postgres:postgres-query-and-indexing"
+doc-engine get "postgres:postgres-connection-and-locking"
+doc-engine get "postgres:postgres-schema-and-data-access"
 doc-engine get curated:zig-0.16-std
 doc-engine get zig:zig-0.16-single-file-tools
 doc-engine get curated:axum-0.8
@@ -116,6 +127,8 @@ Before generating code for an existing codebase:
 ## 6. Anti-Hallucination Rules
 
 * ❌ **DO NOT scrape online docs when doc-engine is available**: Web scraping introduces 100k+ tokens of bloated HTML and triggers output length limits.
+* ❌ **DO NOT write unindexed Postgres foreign keys or omit FORCE RLS**: Unindexed FKs cause full-table locks on parent deletes; omitting FORCE RLS causes data leakage across tenants.
+* ❌ **DO NOT call naked `auth.uid()` in RLS policies**: Always wrap as `(SELECT auth.uid())` to prevent per-row re-evaluation and query plan degradation.
 * ❌ **DO NOT guess Zig standard library APIs**: Zig v0.16.0 broke nearly all 0.11-0.13 APIs. Always query `doc-engine search "<query>" --lib zig` and `doc-engine get curated:zig-0.16-std`.
 * ❌ **DO NOT mix React 18 and 19 idioms**: Always ground on the project's lockfile before choosing hook APIs.
 
