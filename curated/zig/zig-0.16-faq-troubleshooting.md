@@ -293,7 +293,68 @@ pub fn loadFile(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
 
 ---
 
-## 11. Summary Table: LLM Drift Cheat Sheet
+## 11. Child Process Execution: `std.process.Child.init` Removed
+
+### ❌ Error Symptom
+```text
+src/main.zig:45:34: error: root source file struct 'process.Child' has no member named 'init'
+    var child = std.process.Child.init(&argv, allocator);
+                ~~~~~~~~~~~~~~~~~^~~~~
+```
+
+### 🔍 Root Cause
+In Zig v0.16.0+, child process creation is moved from `Child.init` to the I/O-aware free function `std.process.spawn(io, .{ .argv = ... })`.
+
+### ✅ Modern Fix (v0.16.0+)
+```zig
+pub fn runCommand(io: std.Io, cmd: []const []const u8) !void {
+    var child = try std.process.spawn(io, .{
+        .argv = cmd,
+    });
+    const term = try child.wait(io);
+    switch (term) {
+        .exited => |code| {
+            if (code != 0) return error.CommandFailed;
+        },
+        else => return error.AbnormalTermination,
+    }
+}
+```
+
+---
+
+## 12. Standard I/O Streams: `std.io.getStdOut()` Removed
+
+### ❌ Error Symptom
+```text
+src/main.zig:7:24: error: root source file struct 'std' has no member named 'io'
+    const stdout = std.io.getStdOut().writer();
+                       ^~
+```
+
+### 🔍 Root Cause
+The ambient `std.io` namespace was removed in v0.16.0. Standard output is accessed via `std.posix.system.write(std.posix.STDOUT_FILENO, ...)` or via the I/O context passed into `main(init: std.process.Init)`.
+
+### ✅ Modern Fix (v0.16.0+)
+```zig
+// For high-performance CLI tools:
+const StdoutWriter = struct {
+    pub fn writeAll(_: StdoutWriter, bytes: []const u8) !void {
+        var written: usize = 0;
+        while (written < bytes.len) {
+            const n_signed = std.posix.system.write(std.posix.STDOUT_FILENO, bytes.ptr + written, bytes.len - written);
+            if (@as(isize, @bitCast(n_signed)) < 0) return error.WriteFailed;
+            const n: usize = @intCast(n_signed);
+            if (n == 0) break;
+            written += n;
+        }
+    }
+};
+```
+
+---
+
+## 13. Summary Table: LLM Drift Cheat Sheet
 
 | Category | Outdated LLM Hallucination (0.11 ~ 0.13) | Modern Grounding (Zig v0.16.0+) |
 | :--- | :--- | :--- |
@@ -308,3 +369,5 @@ pub fn loadFile(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
 | **Monotonic Timer** | `std.posix.system.clock_gettime(.MONOTONIC)` | `std.Io.Clock.awake.now(init.io)` |
 | **Stdio Write** | `std.posix.write(fd, buf)` | `writeAllFd(fd, buf)` loop with `std.posix.system.write` |
 | **File Access** | `std.fs.cwd().openFile(...)` | `std.posix.system.open` or `std.Io.Dir` |
+| **Child Process** | `std.process.Child.init(...)` | `std.process.spawn(io, .{ .argv = ... })` |
+| **Stdout Stream** | `std.io.getStdOut().writer()` | `init.io` or `std.posix.system.write(STDOUT_FILENO, ...)` |

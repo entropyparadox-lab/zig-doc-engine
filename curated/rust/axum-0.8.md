@@ -1,5 +1,16 @@
 # Axum 0.8 Architecture & Best Practices
 
+## Breaking Changes from Axum 0.7 to 0.8 (CRITICAL)
+- **Route Path Parameter Syntax (`/{param}`)**:
+  - In Axum 0.7: paths used colon prefixes (`/users/:id`, `/files/:token`).
+  - In Axum 0.8: **paths MUST use braces (`/users/{id}`, `/files/{token}`)**.
+  - **Wildcards**: `/*path` in 0.7 becomes `/{*path}` in 0.8.
+  - **Runtime Panic if violated**:
+    `Path segments must not start with ':'. For capture groups, use '{capture}'. If you meant to literally match a segment starting with a colon, call without_v07_checks on the router.`
+  - **Fix**: Replace all `:param` with `{param}` in `.route()` definitions.
+- **Tower-HTTP Compatibility**: Axum 0.8 requires `tower-http = "0.6"`.
+- **Matchit Engine**: Upgraded to `matchit 0.8` (RFC 6570 URI template compliant).
+
 ## Core Concepts
 - `axum::Router`: Type-safe route builder. Supports nesting via `.nest()` and fallback.
 - `axum::extract`: Extractors for State, Path, Query, Json, and Extension.
@@ -10,8 +21,8 @@ Always use `axum::extract::State` with `Arc<AppState>` or cloned internal fields
 
 ```rust
 use axum::{
-    extract::State,
-    routing::{get, post},
+    extract::{Path, State},
+    routing::{get, post, delete},
     Json, Router,
 };
 use std::sync::Arc;
@@ -26,6 +37,9 @@ pub fn create_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health_check))
         .route("/api/items", post(create_item))
+        // NOTE: Use {id} instead of :id in Axum 0.8!
+        .route("/api/items/{id}", get(get_item))
+        .route("/api/items/{id}", delete(delete_item))
         .with_state(state)
 }
 

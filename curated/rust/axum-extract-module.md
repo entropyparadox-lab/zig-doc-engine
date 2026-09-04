@@ -28,7 +28,7 @@ async fn list_users(State(pool): State<sqlx::PgPool>) -> Json<Vec<User>> { /* ..
 ```
 
 ### 2. Path Parameters (`Path<T>`)
-- Deserializes URL segments defined like `/:id` or `/:org/:repo`.
+- Deserializes URL segments defined like `/{id}` or `/{org}/{repo}` (Axum 0.8 syntax; legacy 0.7 used `/:id`).
 - Supports single primitive types `Path(id): Path<i64>` or tuples `Path((org, repo)): Path<(String, String)>` or structs `Path(params): Path<PathParams>`.
 
 ```rust
