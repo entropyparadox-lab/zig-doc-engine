@@ -1,18 +1,14 @@
 const std = @import("std");
 const engine = @import("engine.zig");
 
-const c = @cImport({
-    @cInclude("stdio.h");
-    @cInclude("unistd.h");
-    @cInclude("sys/wait.h");
-});
+const c = @import("c");
 
 fn writeFd(bytes: []const u8) void {
     _ = c.write(1, bytes.ptr, bytes.len);
 }
 
 fn readFileContent(allocator: std.mem.Allocator, file_path: []const u8) ![]u8 {
-    const path_z = try allocator.dupeZ(u8, file_path);
+    const path_z = try allocator.dupeSentinel(u8, file_path, 0);
     defer allocator.free(path_z);
 
     const f = c.fopen(path_z.ptr, "rb") orelse return error.FileNotFound;
@@ -41,7 +37,7 @@ pub fn main(init: std.process.Init) !void {
 
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help") or std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "help")) {
         std.debug.print(
-            \\doc-engine (Zig Edition v0.16.0) - High-performance Documentation FTS5 Engine
+            \\doc-engine (Zig Edition v0.17.0) - High-performance Documentation FTS5 Engine
             \\
             \\Usage:
             \\  doc-engine search <query> [--lib <lib>] [--ver <version>] [--tier <1|2|3>] [--limit <n>]
@@ -62,7 +58,7 @@ pub fn main(init: std.process.Init) !void {
 
     const home = init.minimal.environ.getAlloc(allocator, "HOME") catch ".";
     const db_path = try std.fs.path.join(allocator, &[_][]const u8{ home, ".hermes", "docs", "db", "docs.db" });
-    const db_path_c = try allocator.dupeZ(u8, db_path);
+    const db_path_c = try allocator.dupeSentinel(u8, db_path, 0);
 
     if (std.mem.eql(u8, cmd, "search")) {
         var query_opt: ?[]const u8 = null;
@@ -244,7 +240,7 @@ pub fn main(init: std.process.Init) !void {
         std.debug.print("Indexed document: {s}\n", .{doc_id});
     } else if (std.mem.eql(u8, cmd, "sync")) {
         const sync_runner = try std.fs.path.join(allocator, &[_][]const u8{ home, ".hermes", "plugins", "dev-docs", "target", "release", "doc-engine" });
-        const sync_runner_c = try allocator.dupeZ(u8, sync_runner);
+        const sync_runner_c = try allocator.dupeSentinel(u8, sync_runner, 0);
 
         var child_args = try std.ArrayList(?[*c]const u8).initCapacity(allocator, args.len + 2);
         try child_args.append(allocator, sync_runner_c.ptr);
@@ -252,7 +248,7 @@ pub fn main(init: std.process.Init) !void {
 
         var i: usize = 2;
         while (i < args.len) : (i += 1) {
-            const arg_c = try allocator.dupeZ(u8, args[i]);
+            const arg_c = try allocator.dupeSentinel(u8, args[i], 0);
             try child_args.append(allocator, arg_c.ptr);
         }
         try child_args.append(allocator, null);

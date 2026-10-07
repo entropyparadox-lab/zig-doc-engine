@@ -1,9 +1,6 @@
 const std = @import("std");
 
-const c = @cImport({
-    @cInclude("sqlite3.h");
-    @cInclude("stdio.h");
-});
+const c = @import("c");
 
 pub const SearchResult = struct {
     id: []const u8,
