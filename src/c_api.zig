@@ -6,7 +6,7 @@ pub const DocEngineHandle = ?*anyopaque;
 export fn doc_engine_open(db_path: [*c]const u8, read_only: bool) DocEngineHandle {
     const allocator = std.heap.c_allocator;
     const path_span = std.mem.span(db_path);
-    const path_z = allocator.dupeZ(u8, path_span) catch return null;
+    const path_z = allocator.dupeSentinel(u8, path_span, 0) catch return null;
     defer allocator.free(path_z);
 
     const eng = allocator.create(engine.Engine) catch return null;
@@ -91,7 +91,7 @@ export fn doc_engine_search_json_ver(
     }
     json_buf.appendSlice(allocator, "\n]") catch return null;
 
-    const out_z = allocator.dupeZ(u8, json_buf.items) catch return null;
+    const out_z = allocator.dupeSentinel(u8, json_buf.items, 0) catch return null;
     return out_z.ptr;
 }
 

@@ -1,9 +1,9 @@
 # zig-doc-engine
 
-> **Ultra-lightweight (<550KB), blazing-fast documentation indexing and FTS5 search engine written in Zig v0.16.0.**
+> **Ultra-lightweight (<550KB), blazing-fast documentation indexing and FTS5 search engine written in Zig v0.17.0.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Zig](https://img.shields.io/badge/Zig-0.16.0-orange.svg)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.17.0-orange.svg)](https://ziglang.org/)
 [![Language: English](https://img.shields.io/badge/Language-English-green.svg)](#)
 [![Language: 한국어](https://img.shields.io/badge/Language-한국어-red.svg)](README.ko.md)
 

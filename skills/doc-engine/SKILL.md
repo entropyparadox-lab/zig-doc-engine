@@ -88,6 +88,8 @@ doc-engine search "std.Io bufferedReader" --lib zig --tier 2
 
 ### B. Step 2: Load Complete Compilable Template
 ```bash
+doc-engine get curated:zig-0.17-std
+doc-engine get curated:zig-0.17-faq-troubleshooting
 doc-engine get curated:zig-0.16-std
 doc-engine get zig:zig-0.16-single-file-tools
 doc-engine get curated:axum-0.8
@@ -116,7 +118,7 @@ Before generating code for an existing codebase:
 ## 6. Anti-Hallucination Rules
 
 * ❌ **DO NOT scrape online docs when doc-engine is available**: Web scraping introduces 100k+ tokens of bloated HTML and triggers output length limits.
-* ❌ **DO NOT guess Zig standard library APIs**: Zig v0.16.0 broke nearly all 0.11-0.13 APIs. Always query `doc-engine search "<query>" --lib zig` and `doc-engine get curated:zig-0.16-std`.
+* ❌ **DO NOT guess Zig standard library APIs**: Zig v0.16.0/v0.17.0 broke older APIs. Always query `doc-engine search "<query>" --lib zig` and `doc-engine get curated:zig-0.17-std`.
 * ❌ **DO NOT mix React 18 and 19 idioms**: Always ground on the project's lockfile before choosing hook APIs.
 
 ---

@@ -1,6 +1,6 @@
 # zig-doc-engine (한국어)
 
-> **Zig v0.16.0으로 작성된 초경량(535KB), 초고속 기술문서 색인 및 FTS5 검색 엔진.**
+> **Zig v0.17.0으로 작성된 초경량(535KB), 초고속 기술문서 색인 및 FTS5 검색 엔진.**
 
 [English Version](README.md)
 
