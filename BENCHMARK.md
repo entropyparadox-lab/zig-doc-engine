@@ -38,6 +38,12 @@ We evaluated **8 LLM model families/generations** across 4 high-risk breaking-ch
 
 | Model Family & Generation | Scenario | Before (No Docs) | After (`doc-engine`) | Observed Grounding Impact |
 | :--- | :--- | :---: | :---: | :--- |
+| **Google Gemini 3.8 Flash** | **Zig v0.17.0** | ❌ FAIL (`argsAlloc`) | 🏆 **PASS (100%)** | `std.process.Init` & `init.minimal.args` adopted |
+| *(Active Production Model)* | **Zig v0.16.0** | ❌ FAIL (`argsAlloc`) | 🏆 **PASS (100%)** | Adopted 0.16 `argsWithAllocator` |
+| | **Go 1.27 (Mux & Type Inference)** | ✅ PASS | 🏆 **PASS (100%)** | Go 1.27 `r.PathValue` & `embed.FS` boilerplate verified |
+| | **Rust Axum 0.8** | ✅ PASS | 🏆 **PASS (100%)** | Clean version lock |
+| | **React 18 / Next 14**| ✅ PASS | 🏆 **PASS (100%)** | Valid React 18 form state |
+| | **Tailwind CSS v4** | ✅ PASS | 🏆 **PASS (100%)** | CSS-First `@theme` adopted |
 | **OpenAI GPT-4o** | **Zig v0.16.0** | ❌ FAIL (`argsAlloc`) | 🏆 **PASS (100%)** | Adopted 0.16 `argsWithAllocator` |
 | | **Rust Axum 0.7** | ✅ PASS | 🏆 **PASS (100%)** | Clean version lock |
 | | **React 18 / Next 14**| ✅ PASS | 🏆 **PASS (100%)** | Valid React 18 form state |

@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 """Multi-Model x Multi-Language Precision Benchmark for doc-engine (3-Tier LoD).
 
-Evaluates 3 distinct model classes:
-1. Gemini 3.7 Flash (Fast frontier model)
-2. Claude Fable (Deep reasoning / coding agent model)
-3. Qwen 3.8 27B (Open-weights local/cloud model)
-
-Evaluates 4 high-risk breaking-change language/version scenarios:
-1. Zig v0.16.0 (Breaking standard library API changes)
-2. Rust Axum 0.7 (Legacy scoped version grounding)
-3. React 18 / Next.js 14 (Preventing React 19 useActionState runtime crash)
-4. Tailwind CSS v4 (@theme CSS-first vs v3 JS config)
+Evaluates models against breaking-change language/version scenarios:
+1. Zig v0.17.0 (std.process.Init, init.minimal.args, allocator.print, dupeSentinel)
+2. Zig v0.16.0 (argsWithAllocator, std.process.Init)
+3. Go 1.27 (Enhanced ServeMux path wildcards, r.PathValue, generalized function type inference)
+4. Rust Axum 0.8 (/{id} routing syntax, axum::extract::State)
+5. React 18 / Next.js 14 (Preventing React 19 useActionState runtime crash)
+6. Tailwind CSS v4 (@theme CSS-first vs v3 JS config)
 """
 
 import os
@@ -19,44 +16,50 @@ import json
 import urllib.request
 import subprocess
 
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_GENAI_API_KEY", "")
 BIZROUTER_KEY = os.environ.get("BIZROUTER_API_KEY", "")
 
 MODELS = [
-    ("Gemini 3.7 Flash", "openai_compat", "google/gemini-3.7-flash"),
-    ("Claude Fable", "anthropic_messages", "anthropic/claude-fable-5"),
-    ("Qwen 3.8 27B", "openai_compat", "bizrouter/qwen-3.8-27b"),
+    ("Gemini 3.8 Flash", "gemini_api", "gemini-3.8-flash"),
 ]
 
 SCENARIOS = [
     {
+        "id": "zig_017",
+        "lang": "Zig v0.17.0",
+        "prompt": "Write a minimal Zig v0.17.0 main program that parses CLI arguments and prints them. Provide ONLY the code without explanation or markdown formatting.",
+        "curated_doc": "curated:zig-0.17-std",
+        "correct_markers": ["std.process.Init", "init.minimal.args"],
+        "hallucination_markers": ["argsAlloc", "argsFree"],
+    },
+    {
         "id": "zig_016",
         "lang": "Zig v0.16.0",
-        "prompt": "Write a minimal Zig v0.16.0 main program that parses CLI arguments and reads a file. Provide ONLY the code.",
-        "search_query": "process argsWithAllocator std.Io",
-        "search_lib": "zig",
-        "search_ver": "0.16.0",
+        "prompt": "Write a minimal Zig v0.16.0 main program that parses CLI arguments and reads a file. Provide ONLY the code without explanation or markdown formatting.",
         "curated_doc": "curated:zig-0.16-std",
         "correct_markers": ["argsWithAllocator", "std.process.Init", "init.minimal.args"],
         "hallucination_markers": ["argsAlloc", "argsFree"],
     },
     {
-        "id": "axum_07",
-        "lang": "Rust (Axum 0.7)",
-        "prompt": "In a Rust project using axum = \"0.7\", write a router and POST /items handler with AppState. Provide ONLY the code.",
-        "search_query": "Router State with_state",
-        "search_lib": "axum",
-        "search_ver": "0.7",
-        "curated_doc": "curated:axum-0.7",
-        "correct_markers": ["State(state): State<AppState>", "with_state"],
+        "id": "go_127",
+        "lang": "Go 1.27 (Routing & Inference)",
+        "prompt": "Write a complete Go 1.27 main program using standard net/http ServeMux that registers 'GET /items/{id}', extracts path parameter using r.PathValue, and uses generalized function type inference to map items without explicit type arguments. Provide ONLY the code without explanation or markdown formatting.",
+        "curated_doc": "curated:go-1.27-std",
+        "correct_markers": ["r.PathValue(", "GET /items/{id}"],
+        "hallucination_markers": ["mux.Vars", "chi.URLParam", "gorilla/mux"],
+    },
+    {
+        "id": "axum_08",
+        "lang": "Rust (Axum 0.8)",
+        "prompt": "In a Rust project using axum = \"0.8\", write a router with with_state and POST /items handler with AppState. Provide ONLY the code without explanation or markdown formatting.",
+        "curated_doc": "curated:axum-0.8",
+        "correct_markers": ["State(state): State<Arc<AppState>>", "State(state): State<AppState>", "with_state"],
         "hallucination_markers": ["MethodRouter::new"],
     },
     {
         "id": "react_18",
         "lang": "React 18 / Next 14",
-        "prompt": "In a React 18 + Next.js 14 project, write a client component form that calls a server action with state feedback. Provide ONLY the code.",
-        "search_query": "useFormState useTransition",
-        "search_lib": "react",
-        "search_ver": "18",
+        "prompt": "In a React 18 + Next.js 14 project, write a client component form that calls a server action with state feedback. Provide ONLY the code without explanation or markdown formatting.",
         "curated_doc": "curated:react-18",
         "correct_markers": ["useFormState", "useTransition"],
         "hallucination_markers": ["useActionState"],
@@ -64,10 +67,7 @@ SCENARIOS = [
     {
         "id": "tailwind_v4",
         "lang": "Tailwind CSS v4",
-        "prompt": "Write the setup CSS to configure Tailwind CSS v4 with brand color #3b82f6 and Pretendard font. Provide ONLY the CSS.",
-        "search_query": "@theme import tailwindcss",
-        "search_lib": "tailwindcss",
-        "search_ver": "4",
+        "prompt": "Write the setup CSS to configure Tailwind CSS v4 with brand color #3b82f6 and Pretendard font. Provide ONLY the CSS without explanation or markdown formatting.",
         "curated_doc": "curated:tailwindcss-v4",
         "correct_markers": ["@import \"tailwindcss\";", "@theme"],
         "hallucination_markers": ["tailwind.config.js", "@tailwind base;"],
@@ -87,13 +87,32 @@ def query_doc_engine(doc_id: str) -> str:
 def call_llm(model_tuple: tuple[str, str, str], prompt: str, context: str = "") -> tuple[str, float, int]:
     model_name, api_mode, model_id = model_tuple
 
-    system_msg = "You are an expert programming assistant. Respond strictly with accurate, working code."
+    system_msg = "You are an expert programming assistant. Respond strictly with accurate, working code without explanations or markdown backticks."
     if context:
         system_msg += f"\n\n[OFFICIAL VERIFIED DOCUMENTATION REFERENCE - doc-engine]:\n{context}"
 
     t0 = time.perf_counter()
 
-    if api_mode == "anthropic_messages":
+    if api_mode == "gemini_api":
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={GEMINI_KEY}"
+        payload = {
+            "system_instruction": {"parts": [{"text": system_msg}]},
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.1}
+        }
+        req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as res:
+                data = json.loads(res.read())
+                latency = time.perf_counter() - t0
+                cand = data.get("candidates", [{}])[0]
+                text = "".join(p.get("text", "") for p in cand.get("content", {}).get("parts", []))
+                meta = data.get("usageMetadata", {})
+                tokens = meta.get("totalTokenCount", 0)
+                return text, latency, tokens
+        except Exception as e:
+            return f"ERROR: {e}", 0.0, 0
+    elif api_mode == "anthropic_messages":
         headers = {
             "x-api-key": BIZROUTER_KEY,
             "anthropic-version": "2023-06-01",
@@ -184,24 +203,27 @@ def main():
 
             status_before = "✅ PASS" if valid_before else "❌ FAIL (Hallucinated)"
             status_after = "✅ PASS (100%)" if valid_after else "❌ FAIL"
-            print(f"  • [{lang:<18}] Before: {status_before:<22} ➔ After (doc-engine): {status_after}")
+            print(f"  • [{lang:<30}] Before: {status_before:<22} ➔ After (doc-engine): {status_after}")
 
     # Final Formatted Table
     print("\n" + "=" * 105)
     print("📊 BENCHMARK ACCURACY & HALLUCINATION RATE SUMMARY")
     print("=" * 105)
-    print(f"{'Model':<20} | {'Scenario':<20} | {'Before (No Docs)':<20} | {'After (With doc-engine)':<24} | {'Overhead'}")
+    print(f"{'Model':<20} | {'Scenario':<30} | {'Before (No Docs)':<20} | {'After (With doc-engine)':<24} | {'Overhead'}")
     print("-" * 105)
 
     for r in results:
         b_str = "✅ PASS" if r["before_valid"] else "❌ FAIL (Hallucinated)"
         a_str = "✅ PASS (100%)" if r["after_valid"] else "❌ FAIL"
         tok_diff = r["after_tok"] - r["before_tok"]
-        print(f"{r['model']:<20} | {r['scenario']:<20} | {b_str:<20} | {a_str:<24} | +{tok_diff:>4} tokens")
+        print(f"{r['model']:<20} | {r['scenario']:<30} | {b_str:<20} | {a_str:<24} | +{tok_diff:>4} tokens")
 
     # Save artifact
-    with open("/home/cycorld/projects/zig-doc-engine/benchmarks/benchmark_results.json", "w", encoding="utf-8") as f:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    result_path = os.path.join(script_dir, "benchmark_results.json")
+    with open(result_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
+    print(f"\n[Saved benchmark results to {result_path}]")
 
 if __name__ == "__main__":
     main()
