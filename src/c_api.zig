@@ -68,30 +68,9 @@ export fn doc_engine_search_json_ver(
 
     const results = eng.search(sanitized.items, lib_span, ver_span, null, limit) catch return null;
 
-    var json_buf: std.ArrayList(u8) = .empty;
-    defer json_buf.deinit(allocator);
-
-    json_buf.appendSlice(allocator, "[\n") catch return null;
-    for (results, 0..) |r, idx| {
-        if (idx > 0) json_buf.appendSlice(allocator, ",\n") catch return null;
-        const row_str = std.fmt.allocPrint(allocator,
-            \\  {{
-            \\    "id": "{s}",
-            \\    "lib_id": "{s}",
-            \\    "title": "{s}",
-            \\    "category": "{s}",
-            \\    "version": "{s}",
-            \\    "tier": {d},
-            \\    "path": "{s}",
-            \\    "snippet": "{s}"
-            \\  }}
-        , .{ r.id, r.lib_id, r.title, r.category, r.version, r.tier, r.path, r.snippet }) catch return null;
-        defer allocator.free(row_str);
-        json_buf.appendSlice(allocator, row_str) catch return null;
-    }
-    json_buf.appendSlice(allocator, "\n]") catch return null;
-
-    const out_z = allocator.dupeSentinel(u8, json_buf.items, 0) catch return null;
+    const json = std.json.Stringify.valueAlloc(allocator, results, .{}) catch return null;
+    defer allocator.free(json);
+    const out_z = allocator.dupeSentinel(u8, json, 0) catch return null;
     return out_z.ptr;
 }
 

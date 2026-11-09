@@ -18,10 +18,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Zig v0.17.0
+      - name: Setup Zig v0.17.1
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.17.0
+          version: 0.17.1
 
       - name: Install SQLite3 (Ubuntu)
         if: runner.os == 'Linux'
@@ -31,10 +31,13 @@ jobs:
         run: zig build -Doptimize=ReleaseFast
 
       - name: Run Tests
-        run: zig build test
+        run: |
+          zig build test
+          python3 scripts/test_ci_smoke.py
+          python3 scripts/test_json_output.py
 
       - name: Verify CLI Binary
         run: |
-          ./zig-out/bin/doc-engine --help || true
+          ./zig-out/bin/doc-engine --help
           ls -lh ./zig-out/bin/doc-engine
           ls -lh ./zig-out/lib/libdocengine.a

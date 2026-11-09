@@ -37,7 +37,7 @@ pub fn main(init: std.process.Init) !void {
 
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help") or std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "help")) {
         std.debug.print(
-            \\doc-engine (Zig Edition v0.17.0) - High-performance Documentation FTS5 Engine
+            \\doc-engine v1.5.1 (Zig Edition) - High-performance Documentation FTS5 Engine
             \\
             \\Usage:
             \\  doc-engine search <query> [--lib <lib>] [--ver <version>] [--tier <1|2|3>] [--limit <n>]
@@ -116,25 +116,10 @@ pub fn main(init: std.process.Init) !void {
 
         const results = try eng.search(sanitized.items, lib_opt, ver_opt, tier_opt, limit);
 
-        writeFd("[\n");
-        for (results, 0..) |r, idx| {
-            if (idx > 0) writeFd(",\n");
-            const row_json = try std.fmt.allocPrint(allocator,
-                \\  {{
-                \\    "id": "{s}",
-                \\    "lib_id": "{s}",
-                \\    "title": "{s}",
-                \\    "category": "{s}",
-                \\    "version": "{s}",
-                \\    "tier": {d},
-                \\    "path": "{s}",
-                \\    "snippet": "{s}"
-                \\  }}
-            , .{ r.id, r.lib_id, r.title, r.category, r.version, r.tier, r.path, r.snippet });
-            defer allocator.free(row_json);
-            writeFd(row_json);
-        }
-        writeFd("\n]\n");
+        const results_json = try std.json.Stringify.valueAlloc(allocator, results, .{});
+        defer allocator.free(results_json);
+        writeFd(results_json);
+        writeFd("\n");
     } else if (std.mem.eql(u8, cmd, "get")) {
         if (args.len < 3) {
             std.debug.print("Error: target id/path required\n", .{});
@@ -164,23 +149,10 @@ pub fn main(init: std.process.Init) !void {
 
         const list = try eng.listLibraries();
 
-        writeFd("[\n");
-        for (list, 0..) |item, idx| {
-            if (idx > 0) writeFd(",\n");
-            const item_json = try std.fmt.allocPrint(allocator,
-                \\  {{
-                \\    "lib_id": "{s}",
-                \\    "category": "{s}",
-                \\    "version": "{s}",
-                \\    "tier": {d},
-                \\    "doc_count": {d},
-                \\    "total_bytes": {d}
-                \\  }}
-            , .{ item.lib_id, item.category, item.version, item.tier, item.doc_count, item.total_bytes });
-            defer allocator.free(item_json);
-            writeFd(item_json);
-        }
-        writeFd("\n]\n");
+        const list_json = try std.json.Stringify.valueAlloc(allocator, list, .{});
+        defer allocator.free(list_json);
+        writeFd(list_json);
+        writeFd("\n");
     } else if (std.mem.eql(u8, cmd, "index-file")) {
         var lib_opt: ?[]const u8 = null;
         var title_opt: ?[]const u8 = null;
