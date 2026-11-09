@@ -8,7 +8,7 @@ Thank you for contributing to `zig-doc-engine`! We welcome contributions to impr
 
 We maintain a strict **Dual-Branch Strategy**:
 
-* **`main` (Protected)**: Targets **Official Stable Zig (`0.16.x`)**. All production releases (`vX.Y.Z`) are cut exclusively from `main`. Direct push to `main` is prohibited.
+* **`main` (Protected)**: Targets **Official Stable Zig (`0.17.1` in CI; declared minimum `0.17.0`)**. All production releases (`vX.Y.Z`) are cut exclusively from `main`. Direct push to `main` is prohibited.
 * **`zig-master`**: Tracks upstream `ziglang/zig` nightly builds to prepare for compiler/AST changes in advance.
 * **`feat/<name>` / `fix/<name>`**: Branch off `main` for stable changes, or off `zig-master` for nightly updates.
 

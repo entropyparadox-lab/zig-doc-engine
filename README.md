@@ -1,19 +1,19 @@
 # zig-doc-engine
 
-> **Ultra-lightweight (<550KB), blazing-fast documentation indexing and FTS5 search engine written in Zig v0.17.0.**
+> **Documentation indexing and SQLite FTS5 search engine built with stable Zig 0.17.1.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Zig](https://img.shields.io/badge/Zig-0.17.0-orange.svg)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.17.1-orange.svg)](https://ziglang.org/download/)
 [![Language: English](https://img.shields.io/badge/Language-English-green.svg)](#)
 [![Language: 한국어](https://img.shields.io/badge/Language-한국어-red.svg)](README.ko.md)
 
-`zig-doc-engine` is an embedded, zero-dependency documentation search engine designed for AI coding agents, developer CLI tools, and edge devices. It combines zero-copy markdown parsing with embedded SQLite FTS5 full-text indexing, delivering sub-millisecond cold starts and throughput over 65,000 queries/second.
+`zig-doc-engine` is an embedded documentation search engine designed for AI coding agents, developer CLI tools, and edge devices. It combines zero-copy markdown parsing with SQLite FTS5 full-text indexing and links against system SQLite3 and libc.
 
 ---
 
 ## ⚡ Performance Highlights (vs Rust & Go)
 
-Benchmarked on Linux x86_64 across a synthetic **10MB documentation corpus (11,046 sections)** and **20,000 multi-threaded queries**:
+Historical Zig 0.16.0 results on Linux x86_64 across a synthetic **10MB documentation corpus (11,046 sections)** and **20,000 multi-threaded queries** follow. These are not measurements of the current Zig 0.17.1 build; performance, startup time, and binary size have not been re-benchmarked for this upgrade.
 
 | Metric | **zig-doc-engine (Zig v0.16.0)** | **Rust (AOT rusqlite)** | **Go 1.26 (cgo-sqlite3)** | Winner / Advantage |
 | :--- | :---: | :---: | :---: | :--- |
@@ -29,7 +29,7 @@ Benchmarked on Linux x86_64 across a synthetic **10MB documentation corpus (11,0
 
 * **Zero-copy Parsing**: Ingests multi-megabyte markdown files without heap allocation churn using Zig memory slices.
 * **Embedded SQLite FTS5**: Leverages battle-tested SQLite FTS5 for ranked BM25 search, snippet generation, and boolean filtering.
-* **Sub-millisecond Cold Starts**: Native AOT binary starts in ~1.2ms with zero VM or runtime overhead.
+* **Native AOT CLI**: No VM; current startup latency depends on the build and host and is not re-measured here.
 * **Dual Target Output**: Builds both a standalone CLI binary (`doc-engine`) and a static C-ABI library (`libdocengine.a`) with C headers.
 * **Pluggable Data Sources**: Indexes `llms.txt`, official markdown specs, and local documentation repositories.
 * **Empirical Multi-Model & Compiler Benchmark**: Comprehensive evaluation across **8 model families and live compilers (`zig`, `cargo`, `tsc`)** (see [BENCHMARK.md](BENCHMARK.md)).
@@ -40,7 +40,7 @@ Benchmarked on Linux x86_64 across a synthetic **10MB documentation corpus (11,0
 ## 🛠️ Installation & Quick Start
 
 ### 1. Build from Source
-Requires [Zig v0.16.0](https://ziglang.org/download/) and `sqlite3`:
+CI pins [stable Zig 0.17.1](https://ziglang.org/download/). The package retains its declared minimum of Zig 0.17.0; this patch does not require newer APIs. Install SQLite3 development headers/libraries and libc build support (for example, `libsqlite3-dev` on Ubuntu).
 
 ```bash
 git clone https://github.com/entropyparadox-lab/zig-doc-engine.git
@@ -49,7 +49,7 @@ zig build -Doptimize=ReleaseFast
 ```
 
 The compiled artifacts will be in `zig-out/`:
-* `zig-out/bin/doc-engine`: Single standalone CLI binary (~535KB stripped)
+* `zig-out/bin/doc-engine`: CLI binary (size depends on optimization, stripping, and toolchain)
 * `zig-out/lib/libdocengine.a`: C-compatible static library
 * `zig-out/include/doc_engine.h`: C header interface
 
@@ -161,7 +161,7 @@ int main() {
 │   ├── engine.zig         # SQLite FTS5 core engine
 │   └── c_api.zig          # C-ABI export functions
 ├── benchmarks/            # Reproducible benchmark suite
-├── build.zig              # Zig v0.16.0 build configuration
+├── build.zig              # Zig 0.17 build configuration (CI: 0.17.1)
 ├── LICENSE                # MIT License
 ├── README.md              # English documentation
 └── README.ko.md           # 한국어 문서

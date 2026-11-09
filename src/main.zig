@@ -37,7 +37,7 @@ pub fn main(init: std.process.Init) !void {
 
     if (args.len < 2 or std.mem.eql(u8, args[1], "--help") or std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "help")) {
         std.debug.print(
-            \\doc-engine (Zig Edition v0.17.0) - High-performance Documentation FTS5 Engine
+            \\doc-engine v1.5.1 (Zig Edition) - High-performance Documentation FTS5 Engine
             \\
             \\Usage:
             \\  doc-engine search <query> [--lib <lib>] [--ver <version>] [--tier <1|2|3>] [--limit <n>]
