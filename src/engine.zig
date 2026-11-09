@@ -270,7 +270,7 @@ pub const Engine = struct {
 
     pub fn listLibraries(self: *Engine) ![]LibSummary {
         const sql =
-            \\SELECT lib_id, category, version, tier, COUNT(*), SUM(LENGTH(content))
+            \\SELECT lib_id, category, version, tier, COUNT(*), SUM(LENGTH(CAST(content AS BLOB)))
             \\FROM docs
             \\GROUP BY lib_id, category, version, tier
             \\ORDER BY tier, category, lib_id, version;

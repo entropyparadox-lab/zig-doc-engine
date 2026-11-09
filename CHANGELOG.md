@@ -7,6 +7,8 @@
 - Report the package version, not a hard-coded compiler version, in CLI help.
 - Correct English/Korean build prerequisites and distinguish historical Zig 0.16.0 benchmarks from the current compiler. Preserve all versioned 0.16 documentation and benchmark data.
 - Update the contributor stable-compiler policy. SQLite3 and libc remain build/link dependencies; no new dependencies are introduced.
+- Serialize CLI search/list and C-ABI search responses with the standard JSON encoder, escaping multiline snippets, quotes, backslashes, and control characters. Add strict JSON round-trip regression coverage against an isolated database.
+- Correct library `total_bytes` to count UTF-8 bytes rather than Unicode characters, exposed by the round-trip fixture.
 
 ### Official sources
 
@@ -16,4 +18,4 @@
 
 ### Existing PR #6
 
-Read-only review of [PR #6](https://github.com/entropyparadox-lab/zig-doc-engine/pull/6) found useful but separate Next.js 15 / React 19 / Axum 0.8 documentation work, along with a stale 1.4.1 version bump and historical Zig 0.16 FAQ edits. None is incorporated into this compiler patch: the frontend/Rust additions need their own verification and conflict resolution against 1.5.x. The PR is left open and unchanged; no merge or branch rewrite is performed.
+Selectively incorporate four verified documentation files from [PR #6](https://github.com/entropyparadox-lab/zig-doc-engine/pull/6): Next.js 15, React 19, Axum 0.8, and the Axum extractor module. Correct the examples and preserve the current 1.5.1 package version rather than adopting the stale 1.4.1 bump. Enterprise React, SolidJS, Svelte, and historical Zig 0.16 FAQ changes remain unadopted. PR #6 stays open: it is not fully superseded. No merge or branch rewrite is performed.
