@@ -1,5 +1,35 @@
 # Axum 0.8 Architecture & Best Practices
 
+## Route migration from 0.7 to 0.8
+
+Check `Cargo.lock` before choosing routing syntax. Axum 0.8 uses `/users/{id}`
+instead of `/users/:id`, and `/files/{*path}` instead of `/files/*path`.
+Legacy colon/asterisk prefixes panic at route registration by default.
+`without_v07_checks()` allows those characters in **literal** segments; it does
+not restore 0.7 capture syntax. Wildcards require a nonempty suffix, so register
+`/files` separately if it also needs a handler.
+
+Source: [Axum 0.8 Router reference](https://docs.rs/axum/0.8.0/axum/struct.Router.html).
+This standalone example needs only `axum = "0.8"`:
+
+```rust
+use axum::{extract::Path, routing::get, Router};
+
+pub fn route_example() -> Router {
+    Router::new()
+        .route("/users/{id}", get(user))
+        .route("/files/{*path}", get(file))
+}
+
+async fn user(Path(id): Path<String>) -> String {
+    id
+}
+
+async fn file(Path(path): Path<String>) -> String {
+    path
+}
+```
+
 ## Core Concepts
 - `axum::Router`: Type-safe route builder. Supports nesting via `.nest()` and fallback.
 - `axum::extract`: Extractors for State, Path, Query, Json, and Extension.
